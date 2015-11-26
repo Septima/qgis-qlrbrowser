@@ -1,0 +1,39 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=Qlr Browser
+qgisMinimumVersion=2.0
+description=This plugin lets the user browse and open qlr files
+version=0.1
+author=Asger Skovbo Petersen, Septima
+email=asger@septima.dk
+
+about=XXXXX.....Long description of plugin purpose....XXXXXX
+
+tracker=https://github.com/Septima/qgis-qlrbrowser/issues
+repository=https://github.com/Septima/qgis-qlrbrowser
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+# changelog=
+
+# Tags are comma separated with spaces allowed
+tags=qlr browser
+
+homepage=https://github.com/Septima/qgis-qlrbrowser
+category=Plugins
+icon=icon.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+

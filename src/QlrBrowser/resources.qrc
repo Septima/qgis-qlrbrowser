@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/QlrBrowser" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
