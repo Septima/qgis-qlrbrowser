@@ -13,20 +13,30 @@
   <property name="windowTitle">
    <string>Qlr Browser</string>
   </property>
-  <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Replace this QLabel
-with the desired
-plugin content.</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+  
+  
+   <widget class="QWidget" name="dockWidgetContents">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>390</width>
+    <height>657</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTreeView" name="treeView">
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
+ 
+ </widget>
+ 
  <resources/>
  <connections/>
 </ui>
