@@ -20,7 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
+from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt, pyqtSlot, QModelIndex
 from PyQt4.QtGui import QAction, QIcon
 from qgis.core import QgsProject, QgsLayerDefinition
 # Initialize Qt resources from file resources.py
@@ -182,7 +182,7 @@ class QlrBrowser:
 
         # connect to provide cleanup on closing of dockwidget
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-        self.dockwidget.qlrSelected.connect(self.onQlrSelected)
+        self.dockwidget.fileSystemModel.dataChanged.connect(self.treeview_itemchanged)
 
         # show the dockwidget
         # TODO: fix to allow choice of dock location
@@ -219,6 +219,18 @@ class QlrBrowser:
         del self.toolbar
 
     # --------------------------------------------------------------------------
-    def onQlrSelected(self, qlrpath):
-        treeGroup = QgsProject.instance().layerTreeRoot()
-        QgsLayerDefinition.loadLayerDefinition(qlrpath, treeGroup)
+    @pyqtSlot(QModelIndex)
+    def treeview_itemchanged(self, index):
+        indexItem = self.dockwidget.fileSystemModel.index(index.row(), 0, index.parent())
+        if self.dockwidget.fileSystemModel.data(indexItem, Qt.CheckStateRole) == Qt.Unchecked:
+            return
+
+        if self.dockwidget.fileSystemModel.isDir(indexItem):
+            print "treeview_itemselected dir selected"
+            pass
+        else:
+            fileName = self.dockwidget.fileSystemModel.fileName(indexItem)
+            filePath = self.dockwidget.fileSystemModel.filePath(indexItem)
+            print "treeview_itemselected", filePath
+            treegroup = QgsProject.instance().layerTreeRoot()
+            QgsLayerDefinition.loadLayerDefinition(filePath, treegroup)
