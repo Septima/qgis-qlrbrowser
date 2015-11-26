@@ -22,6 +22,7 @@
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtGui import QAction, QIcon
+from qgis.core import QgsProject, QgsLayerDefinition
 # Initialize Qt resources from file resources.py
 import resources
 
@@ -184,6 +185,7 @@ class QlrBrowser:
 
         # connect to provide cleanup on closing of dockwidget
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+        self.dockwidget.qlrSelected.connect(self.onQlrSelected)
 
         # show the dockwidget
         # TODO: fix to allow choice of dock location
@@ -220,4 +222,7 @@ class QlrBrowser:
         del self.toolbar
 
     #--------------------------------------------------------------------------
+    def onQlrSelected(self, qlrpath):
+        treeGroup = QgsProject.instance().layerTreeRoot()
+        QgsLayerDefinition.loadLayerDefinition(qlrpath, treeGroup)
 

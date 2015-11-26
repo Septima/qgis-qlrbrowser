@@ -24,7 +24,7 @@
 import os
 
 from PyQt4 import QtGui, uic
-from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QModelIndex
 from qlrfilesystemmodel import QlrFileSystemModel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -34,6 +34,8 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
+
+    qlrSelected = pyqtSignal(str)
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -46,13 +48,13 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.setupUi(self)
 
         self.fileSystemModel = QlrFileSystemModel()
-
         self.setRootPath('/Users/asger/Data/qlr/')
 
-    def closeEvent(self, event):
-        self.closingPlugin.emit()
-        event.accept()
+        self.treeView.doubleClicked.connect(self.treeview_doubleclicked)
 
+    #
+    # Public methods
+    #
     def setRootPath(self, path):
         self.fileSystemModel.setRootPath(path)
         rootIndex = self.fileSystemModel.index(path)
@@ -63,4 +65,25 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.treeView.hideColumn(2)
         self.treeView.hideColumn(3)
         self.treeView.show()
+
+    #
+    # Events
+    #
+    def closeEvent(self, event):
+        self.closingPlugin.emit()
+        event.accept()
+
+    @pyqtSlot(QModelIndex)
+    def treeview_doubleclicked(self, index):
+        indexItem = self.fileSystemModel.index(index.row(), 0, index.parent())
+        if self.fileSystemModel.isDir(indexItem):
+            print "treeview_doubleclicked dir selected"
+            pass
+        else:
+            fileName = self.fileSystemModel.fileName(indexItem)
+            filePath = self.fileSystemModel.filePath(indexItem)
+            print "treeview_doubleclicked", filePath
+            self.qlrSelected.emit(filePath)
+
+
 
