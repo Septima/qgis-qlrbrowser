@@ -57,6 +57,9 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
                 self.checkedItems.add(persistentIndex)
             else:
                 self.checkedItems.remove(persistentIndex)
+            # Emit crashes with QPersistenModelIndex so create a QModelIndex
+            if isinstance(index, QtCore.QPersistentModelIndex):
+                index = self.index(index.row(), 0, index.parent())
             self.dataChanged.emit(index, index)
             return True
         return super(QlrFileSystemModel, self).setData(index, value, role)
@@ -68,6 +71,8 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
         return super(QlrFileSystemModel, self).flags(index) | QtCore.Qt.ItemIsUserCheckable
 
     def toggleChecked(self, index):
+        if isinstance(index, QtCore.QPersistentModelIndex):
+            index = self.index(index.row(), 0, index.parent())
         currentState = self.data(index, QtCore.Qt.CheckStateRole)
         newState = QtCore.Qt.Checked if currentState == QtCore.Qt.Unchecked else QtCore.Qt.Unchecked
         self.setData(index, newState, QtCore.Qt.CheckStateRole)

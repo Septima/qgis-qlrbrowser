@@ -218,3 +218,5 @@ class QlrBrowser:
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
         del self.toolbar
+
+        self.qlrmanager.unload()
