@@ -21,7 +21,10 @@
  ***************************************************************************/
 """
 
+# See http://www.qtcentre.org/threads/27253-QFileSystemModel-with-checkboxes
+
 from PyQt4 import QtGui
+from PyQt4 import QtCore
 
 
 class QlrFileSystemModel(QtGui.QFileSystemModel):
@@ -32,3 +35,39 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
         self.setNameFilterDisables(False)
         # Files are read only
         self.setReadOnly(True)
+
+        self.checkedItems = set()
+
+    # override data to return checkstate
+    def data(self, index, role):
+        # if index.column() == self.columnCount() - 1:
+        #     if role == QtCore.Qt.DisplayRole:
+        #        return QtCore.QString("YourText")
+        #     if role == QtCore.Qt.TextAlignmentRole:
+        #        return QtCore.Qt.AlignHCenter
+
+        if role == QtCore.Qt.CheckStateRole:
+            return  QtCore.Qt.Checked if QtCore.QPersistentModelIndex(index) in self.checkedItems else QtCore.Qt.Unchecked
+        return super(QlrFileSystemModel, self).data(index, role)
+
+    def setData(self, index, value, role=None):
+        if role == QtCore.Qt.CheckStateRole:
+            persistentIndex = QtCore.QPersistentModelIndex(index)
+            if value == QtCore.Qt.Checked:
+                self.checkedItems.add(persistentIndex)
+            else:
+                self.checkedItems.remove(persistentIndex)
+            self.dataChanged.emit(index, index)
+            return True
+        return super(QlrFileSystemModel, self).setData(index, value, role)
+
+    # override flags to let items be checkable
+    def flags(self, index):
+        if not index.column() == 0:
+            return super(QlrFileSystemModel, self).flags(index)
+        return super(QlrFileSystemModel, self).flags(index) | QtCore.Qt.ItemIsUserCheckable
+
+    def toggleChecked(self, index):
+        currentState = self.data(index, QtCore.Qt.CheckStateRole)
+        newState = QtCore.Qt.Checked if currentState == QtCore.Qt.Unchecked else QtCore.Qt.Unchecked
+        self.setData(index, newState, QtCore.Qt.CheckStateRole)
