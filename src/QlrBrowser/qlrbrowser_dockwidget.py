@@ -25,6 +25,7 @@ import os
 
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import pyqtSignal
+from qlrfilesystemmodel import QlrFileSystemModel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qlrbrowser_dockwidget_base.ui'))
@@ -44,10 +45,9 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-        self.fileSystemModel = QtGui.QFileSystemModel()
-        self.fileSystemModel.setReadOnly(True)
+        self.fileSystemModel = QlrFileSystemModel()
 
-        self.setRootPath('/')
+        self.setRootPath('/Users/asger/Data/qlr/')
 
     def closeEvent(self, event):
         self.closingPlugin.emit()
@@ -58,5 +58,9 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         rootIndex = self.fileSystemModel.index(path)
         self.treeView.setModel(self.fileSystemModel)
         self.treeView.setRootIndex(rootIndex)
+        # Hide size, kind and modified
+        self.treeView.hideColumn(1)
+        self.treeView.hideColumn(2)
+        self.treeView.hideColumn(3)
         self.treeView.show()
 
