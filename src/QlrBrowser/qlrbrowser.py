@@ -70,7 +70,7 @@ class QlrBrowser:
 
         #print "** INITIALIZING QlrBrowser"
 
-        self.pluginIsActive = False
+        #self.pluginIsActive = False
         self.dockwidget = None
 
 
@@ -168,11 +168,27 @@ class QlrBrowser:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/QlrBrowser/icon.png'
-        self.add_action(
-            icon_path,
-            text=self.tr(u'Qlr Browser'),
-            callback=self.run,
-            parent=self.iface.mainWindow())
+        #self.add_action(
+        #    icon_path,
+        #    text=self.tr(u'Qlr Browser'),
+        #    callback=self.run,
+        #    parent=self.iface.mainWindow())
+
+
+        # dockwidget may not exist if:
+        #    first run of plugin
+        #    removed on close (see self.onClosePlugin method)
+        if self.dockwidget == None:
+            # Create the dockwidget (after translation) and keep reference
+            self.dockwidget = QlrBrowserDockWidget()
+
+        # connect to provide cleanup on closing of dockwidget
+        self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+
+        # show the dockwidget
+        # TODO: fix to allow choice of dock location
+        self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
+        self.dockwidget.show()
 
     #--------------------------------------------------------------------------
 
@@ -190,9 +206,6 @@ class QlrBrowser:
         # when closing the docked window:
         # self.dockwidget = None
 
-        self.pluginIsActive = False
-
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
@@ -207,27 +220,4 @@ class QlrBrowser:
         del self.toolbar
 
     #--------------------------------------------------------------------------
-
-    def run(self):
-        """Run method that loads and starts the plugin"""
-
-        if not self.pluginIsActive:
-            self.pluginIsActive = True
-
-            #print "** STARTING QlrBrowser"
-
-            # dockwidget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget == None:
-                # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = QlrBrowserDockWidget()
-
-            # connect to provide cleanup on closing of dockwidget
-            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
-            # show the dockwidget
-            # TODO: fix to allow choice of dock location
-            self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
-            self.dockwidget.show()
 
