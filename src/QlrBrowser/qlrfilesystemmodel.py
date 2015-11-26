@@ -76,3 +76,4 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
         currentState = self.data(index, QtCore.Qt.CheckStateRole)
         newState = QtCore.Qt.Checked if currentState == QtCore.Qt.Unchecked else QtCore.Qt.Unchecked
         self.setData(index, newState, QtCore.Qt.CheckStateRole)
+        return newState

@@ -34,6 +34,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
+    itemClicked = pyqtSignal(QModelIndex, int)
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -48,6 +49,7 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.fileSystemModel = QlrFileSystemModel()
         self.setRootPath('/Users/asger/Data/qlr/')
 
+        self.fileSystemModel.dataChanged.connect(self.filesystemmodel_itemtoggled)
         self.treeView.doubleClicked.connect(self.treeview_doubleclicked)
 
 
@@ -73,6 +75,15 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         event.accept()
 
     @pyqtSlot(QModelIndex)
+    def filesystemmodel_itemtoggled(self, index):
+        indexItem = self.fileSystemModel.index(index.row(), 0, index.parent())
+        newState = self.fileSystemModel.data(indexItem, Qt.CheckStateRole)
+        self.itemClicked.emit(indexItem, newState)
+
+    @pyqtSlot(QModelIndex)
     def treeview_doubleclicked(self, index):
         indexItem = self.fileSystemModel.index(index.row(), 0, index.parent())
         self.fileSystemModel.toggleChecked(indexItem)
+
+    def toggleItem(self, index):
+        self.fileSystemModel.toggleChecked(index)

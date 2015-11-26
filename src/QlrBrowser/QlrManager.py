@@ -40,7 +40,7 @@ class QlrManager():
         layerTreeRoot.willRemoveChildren.connect(self.legend_layersremoved)
 
         # Get events when user interacts with browser
-        self.browser.fileSystemModel.dataChanged.connect(self.browser_itemchanged)
+        self.browser.itemClicked.connect(self.browser_itemclicked)
 
 
 
@@ -57,7 +57,7 @@ class QlrManager():
         # Check if we have added this node
         for k, v in self.fileSystemItemToLegendNode.items():
             if v == node.children()[indexFrom]:
-                self.browser.fileSystemModel.toggleChecked(k)
+                self.browser.toggleItem(k)
                 self.fileSystemItemToLegendNode.pop(k, None)
         print self.fileSystemItemToLegendNode
 
@@ -71,16 +71,12 @@ class QlrManager():
             self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = node.children()[indexFrom]
         print self.fileSystemItemToLegendNode
 
-    @pyqtSlot(QModelIndex)
-    def browser_itemchanged(self, index):
+    @pyqtSlot(QModelIndex, int)
+    def browser_itemclicked(self, index, newState):
         indexItem = self.browser.fileSystemModel.index(index.row(), 0, index.parent())
         fileName = self.browser.fileSystemModel.fileName(indexItem)
         filePath = self.browser.fileSystemModel.filePath(indexItem)
-        if self.browser.fileSystemModel.data(indexItem, Qt.CheckStateRole) == Qt.Unchecked:
-            # Stupid. We should probably not listen on filesystemmodel.dataChanged but treeview.clicked instead
-            if self.removingNode:
-                print "Removing node. Leave here to avoid infinite loop :-/"
-                return
+        if newState == Qt.Unchecked:
             # Item was unchecked. Remove node
             persistent = QPersistentModelIndex(indexItem)
             if self.fileSystemItemToLegendNode.has_key(persistent):
@@ -109,4 +105,4 @@ class QlrManager():
         layerTreeRoot.willRemoveChildren.disconnect(self.legend_layersremoved)
 
         # Get events when user interacts with browser
-        self.browser.fileSystemModel.dataChanged.disconnect(self.browser_itemchanged)
+        self.browser.itemClicked.disconnect(self.browser_itemclicked)
