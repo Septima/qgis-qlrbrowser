@@ -44,7 +44,19 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
+        self.fileSystemModel = QtGui.QFileSystemModel()
+        self.fileSystemModel.setReadOnly(True)
+
+        self.setRootPath('/')
+
     def closeEvent(self, event):
         self.closingPlugin.emit()
         event.accept()
+
+    def setRootPath(self, path):
+        self.fileSystemModel.setRootPath(path)
+        rootIndex = self.fileSystemModel.index(path)
+        self.treeView.setModel(self.fileSystemModel)
+        self.treeView.setRootIndex(rootIndex)
+        self.treeView.show()
 
