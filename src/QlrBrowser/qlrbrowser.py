@@ -28,6 +28,7 @@ import resources
 
 # Import the code for the DockWidget
 from qlrbrowser_dockwidget import QlrBrowserDockWidget
+from qlrmanager import QlrManager
 import os.path
 
 
@@ -179,10 +180,10 @@ class QlrBrowser:
         if self.dockwidget is None:
             # Create the dockwidget (after translation) and keep reference
             self.dockwidget = QlrBrowserDockWidget()
+            self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
         # connect to provide cleanup on closing of dockwidget
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-        self.dockwidget.fileSystemModel.dataChanged.connect(self.treeview_itemchanged)
 
         # show the dockwidget
         # TODO: fix to allow choice of dock location
@@ -217,20 +218,3 @@ class QlrBrowser:
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
         del self.toolbar
-
-    # --------------------------------------------------------------------------
-    @pyqtSlot(QModelIndex)
-    def treeview_itemchanged(self, index):
-        indexItem = self.dockwidget.fileSystemModel.index(index.row(), 0, index.parent())
-        if self.dockwidget.fileSystemModel.data(indexItem, Qt.CheckStateRole) == Qt.Unchecked:
-            return
-
-        if self.dockwidget.fileSystemModel.isDir(indexItem):
-            print "treeview_itemselected dir selected"
-            pass
-        else:
-            fileName = self.dockwidget.fileSystemModel.fileName(indexItem)
-            filePath = self.dockwidget.fileSystemModel.filePath(indexItem)
-            print "treeview_itemselected", filePath
-            treegroup = QgsProject.instance().layerTreeRoot()
-            QgsLayerDefinition.loadLayerDefinition(filePath, treegroup)
