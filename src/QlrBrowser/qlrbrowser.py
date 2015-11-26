@@ -69,11 +69,10 @@ class QlrBrowser:
         self.toolbar = self.iface.addToolBar(u'QlrBrowser')
         self.toolbar.setObjectName(u'QlrBrowser')
 
-        #print "** INITIALIZING QlrBrowser"
+        # print "** INITIALIZING QlrBrowser"
 
-        #self.pluginIsActive = False
+        # self.pluginIsActive = False
         self.dockwidget = None
-
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -90,18 +89,17 @@ class QlrBrowser:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('QlrBrowser', message)
 
-
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -168,18 +166,17 @@ class QlrBrowser:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/QlrBrowser/icon.png'
-        #self.add_action(
+        # icon_path = ':/plugins/QlrBrowser/icon.png'
+        # self.add_action(
         #    icon_path,
         #    text=self.tr(u'Qlr Browser'),
         #    callback=self.run,
         #    parent=self.iface.mainWindow())
 
-
         # dockwidget may not exist if:
         #    first run of plugin
         #    removed on close (see self.onClosePlugin method)
-        if self.dockwidget == None:
+        if self.dockwidget is None:
             # Create the dockwidget (after translation) and keep reference
             self.dockwidget = QlrBrowserDockWidget()
 
@@ -192,12 +189,12 @@ class QlrBrowser:
         self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
         self.dockwidget.show()
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
 
-        #print "** CLOSING QlrBrowser"
+        # print "** CLOSING QlrBrowser"
 
         # disconnects
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
@@ -211,7 +208,7 @@ class QlrBrowser:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        #print "** UNLOAD QlrBrowser"
+        # print "** UNLOAD QlrBrowser"
 
         for action in self.actions:
             self.iface.removePluginMenu(
@@ -221,8 +218,7 @@ class QlrBrowser:
         # remove the toolbar
         del self.toolbar
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     def onQlrSelected(self, qlrpath):
         treeGroup = QgsProject.instance().layerTreeRoot()
         QgsLayerDefinition.loadLayerDefinition(qlrpath, treeGroup)
-

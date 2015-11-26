@@ -84,6 +84,3 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
             filePath = self.fileSystemModel.filePath(indexItem)
             print "treeview_doubleclicked", filePath
             self.qlrSelected.emit(filePath)
-
-
-

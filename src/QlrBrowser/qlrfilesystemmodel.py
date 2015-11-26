@@ -23,6 +23,7 @@
 
 from PyQt4 import QtGui
 
+
 class QlrFileSystemModel(QtGui.QFileSystemModel):
     def __init__(self):
         super(QlrFileSystemModel, self).__init__()
