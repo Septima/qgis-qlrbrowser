@@ -37,7 +37,7 @@ class QlrManager():
         # Get events whenever layers are added or deleted
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
         layerTreeRoot.addedChildren.connect(self.legend_layersadded)
-        layerTreeRoot.willRemoveChildren.connect(self.legend_layersremoved)
+        layerTreeRoot.removedChildren.connect(self.legend_layersremoved)
 
         # Get events when user interacts with browser
         self.browser.itemClicked.connect(self.browser_itemclicked)
@@ -50,17 +50,17 @@ class QlrManager():
 
 
     def legend_layersremoved(self, node, indexFrom, indexTo):
-        print "WILL REMOVE", node, indexFrom, indexTo
+        print "REMOVED", node, indexFrom, indexTo
         # Ignore, if we removed this node
-        if self.removingNode:
-            return
-        # Check if we have added this node
-        for layerIx in range(indexFrom, indexTo + 1):
-            for k, v in self.fileSystemItemToLegendNode.items():
-                if v == node.children()[layerIx].layerId():
-                    self.browser.toggleItem(k)
-                    self.fileSystemItemToLegendNode.pop(k, None)
-        print self.fileSystemItemToLegendNode
+        # if self.removingNode:
+        #     return
+        # # Check if we have added this node
+        # for layerIx in range(indexFrom, indexTo + 1):
+        #     for k, v in self.fileSystemItemToLegendNode.items():
+        #         if v == node.children()[layerIx].layerId():
+        #             self.browser.toggleItem(k)
+        #             self.fileSystemItemToLegendNode.pop(k, None)
+        # print self.fileSystemItemToLegendNode
 
     def legend_layersadded(self, node, indexFrom, indexTo):
         print "WILL ADDXXXX", node, indexFrom, indexTo
@@ -109,7 +109,7 @@ class QlrManager():
     def unload(self):
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
         layerTreeRoot.addedChildren.disconnect(self.legend_layersadded)
-        layerTreeRoot.willRemoveChildren.disconnect(self.legend_layersremoved)
+        layerTreeRoot.removedChildren.disconnect(self.legend_layersremoved)
 
         # Get events when user interacts with browser
         self.browser.itemClicked.disconnect(self.browser_itemclicked)
