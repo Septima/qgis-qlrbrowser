@@ -55,20 +55,23 @@ class QlrManager():
         if self.removingNode:
             return
         # Check if we have added this node
-        for k, v in self.fileSystemItemToLegendNode.items():
-            if v == node.children()[indexFrom]:
-                self.browser.toggleItem(k)
-                self.fileSystemItemToLegendNode.pop(k, None)
+        for layerIx in range(indexFrom, indexTo + 1):
+            for k, v in self.fileSystemItemToLegendNode.items():
+                if v == node.children()[layerIx].layerId():
+                    self.browser.toggleItem(k)
+                    self.fileSystemItemToLegendNode.pop(k, None)
         print self.fileSystemItemToLegendNode
 
     def legend_layersadded(self, node, indexFrom, indexTo):
-        print "WILL ADD", node, indexFrom, indexTo
+        print "WILL ADDXXXX", node, indexFrom, indexTo
         # Are nodes being added by us?
         if self.modelIndexBeingAdded:
             # node is added by us
             if not indexFrom == indexTo:
                 raise("Yikes")
-            self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = node.children()[indexFrom]
+            layerId = node.children()[indexFrom].layerId()
+            print "Adding layerId", layerId
+            self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = layerId
         print self.fileSystemItemToLegendNode
 
     @pyqtSlot(QModelIndex, int)
@@ -80,13 +83,17 @@ class QlrManager():
             # Item was unchecked. Remove node
             persistent = QPersistentModelIndex(indexItem)
             if self.fileSystemItemToLegendNode.has_key(persistent):
-                node = self.fileSystemItemToLegendNode[persistent]
-                try:
-                    self.removingNode = True
-                    node.parent().removeChildNode(node)
-                finally:
-                    self.removingNode = False
-                self.fileSystemItemToLegendNode.pop(persistent, None)
+                layerId = self.fileSystemItemToLegendNode[persistent]
+                print "Remove layerId", layerId
+                treegroup = QgsProject.instance().layerTreeRoot()
+                node = treegroup.findLayer( layerId )
+                if node:
+                    try:
+                        self.removingNode = True
+                        node.parent().removeChildNode(node)
+                    finally:
+                        self.removingNode = False
+                    self.fileSystemItemToLegendNode.pop(persistent, None)
         else:
             # Item was checked
             if self.browser.fileSystemModel.isDir(indexItem):
