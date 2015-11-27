@@ -28,6 +28,9 @@ from PyQt4 import QtCore
 
 
 class QlrFileSystemModel(QtGui.QFileSystemModel):
+
+    itemToggled = QtCore.pyqtSignal(QtCore.QModelIndex, int)
+
     def __init__(self):
         super(QlrFileSystemModel, self).__init__()
         # only show qlr file
@@ -50,7 +53,7 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
             return  QtCore.Qt.Checked if QtCore.QPersistentModelIndex(index) in self.checkedItems else QtCore.Qt.Unchecked
         return super(QlrFileSystemModel, self).data(index, role)
 
-    def setData(self, index, value, role=None):
+    def setData(self, index, value, role=None, emitItemToggled = True):
         if role == QtCore.Qt.CheckStateRole:
             persistentIndex = QtCore.QPersistentModelIndex(index)
             if value == QtCore.Qt.Checked:
@@ -61,6 +64,8 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
             if isinstance(index, QtCore.QPersistentModelIndex):
                 index = self.index(index.row(), 0, index.parent())
             self.dataChanged.emit(index, index)
+            if emitItemToggled:
+                self.itemToggled.emit(index, value)
             return True
         return super(QlrFileSystemModel, self).setData(index, value, role)
 
@@ -70,10 +75,10 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
             return super(QlrFileSystemModel, self).flags(index)
         return super(QlrFileSystemModel, self).flags(index) | QtCore.Qt.ItemIsUserCheckable
 
-    def toggleChecked(self, index):
+    def toggleChecked(self, index, emitItemToggled = False):
         if isinstance(index, QtCore.QPersistentModelIndex):
             index = self.index(index.row(), 0, index.parent())
         currentState = self.data(index, QtCore.Qt.CheckStateRole)
         newState = QtCore.Qt.Checked if currentState == QtCore.Qt.Unchecked else QtCore.Qt.Unchecked
-        self.setData(index, newState, QtCore.Qt.CheckStateRole)
+        self.setData(index, newState, QtCore.Qt.CheckStateRole, emitItemToggled)
         return newState

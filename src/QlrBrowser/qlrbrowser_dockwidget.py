@@ -49,7 +49,7 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.fileSystemModel = QlrFileSystemModel()
         self.setRootPath('/Users/asger/Data/qlr/')
 
-        self.fileSystemModel.dataChanged.connect(self.filesystemmodel_itemtoggled)
+        self.fileSystemModel.itemToggled.connect(self.filesystemmodel_itemtoggled)
         self.treeView.doubleClicked.connect(self.treeview_doubleclicked)
 
 
@@ -74,10 +74,10 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.closingPlugin.emit()
         event.accept()
 
-    @pyqtSlot(QModelIndex)
-    def filesystemmodel_itemtoggled(self, index):
+    @pyqtSlot(QModelIndex, int)
+    def filesystemmodel_itemtoggled(self, index, newState):
         indexItem = self.fileSystemModel.index(index.row(), 0, index.parent())
-        newState = self.fileSystemModel.data(indexItem, Qt.CheckStateRole)
+        print "emitting itemClicked", indexItem, newState
         self.itemClicked.emit(indexItem, newState)
 
     @pyqtSlot(QModelIndex)
@@ -86,4 +86,4 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.fileSystemModel.toggleChecked(indexItem)
 
     def toggleItem(self, index):
-        self.fileSystemModel.toggleChecked(index)
+        self.fileSystemModel.toggleChecked(index, False)
