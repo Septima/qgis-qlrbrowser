@@ -48,15 +48,8 @@ class QlrManager():
     # http://www.lutraconsulting.co.uk/blog/2014/07/25/qgis-layer-tree-api-part-2/
     # Husk at bruge QPersistentModelIndex (se qlrfilesystemmodel)
 
-
-    def legend_layersremoved(self, node, indexFrom, indexTo):
-        print "REMOVED", node, indexFrom, indexTo
-        # Ignore, if we removed this node
-        if self.removingNode:
-            print "We removed this node our self"
-            return
+    def syncCheckedItems(self):
         # Loop through our list and update if layers have been removed
-
         for fileitem, layerid in self.fileSystemItemToLegendNode.items():
             print "Checking layer id", layerid
             treegroup = QgsProject.instance().layerTreeRoot()
@@ -65,13 +58,15 @@ class QlrManager():
                 print "Layer has been removed"
                 self.browser.toggleItem(fileitem)
                 self.fileSystemItemToLegendNode.pop(fileitem, None)
-        # # Check if we have added this node
-        # for layerIx in range(indexFrom, indexTo + 1):
-        #     for k, v in self.fileSystemItemToLegendNode.items():
-        #         if v == node.children()[layerIx].layerId():
-        #             self.browser.toggleItem(k)
-        #             self.fileSystemItemToLegendNode.pop(k, None)
-        # print self.fileSystemItemToLegendNode
+
+
+    def legend_layersremoved(self, node, indexFrom, indexTo):
+        print "REMOVED", node, indexFrom, indexTo
+        # Ignore, if we removed this node
+        if self.removingNode:
+            print "We removed this node our self"
+            return
+        self.syncCheckedItems()
 
     def legend_layersadded(self, node, indexFrom, indexTo):
         print "WILL ADDXXXX", node, indexFrom, indexTo
