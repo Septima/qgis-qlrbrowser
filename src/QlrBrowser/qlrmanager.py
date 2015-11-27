@@ -52,8 +52,19 @@ class QlrManager():
     def legend_layersremoved(self, node, indexFrom, indexTo):
         print "REMOVED", node, indexFrom, indexTo
         # Ignore, if we removed this node
-        # if self.removingNode:
-        #     return
+        if self.removingNode:
+            print "We removed this node our self"
+            return
+        # Loop through our list and update if layers have been removed
+
+        for fileitem, layerid in self.fileSystemItemToLegendNode.items():
+            print "Checking layer id", layerid
+            treegroup = QgsProject.instance().layerTreeRoot()
+            node = treegroup.findLayer( layerid )
+            if node is None:
+                print "Layer has been removed"
+                self.browser.toggleItem(fileitem)
+                self.fileSystemItemToLegendNode.pop(fileitem, None)
         # # Check if we have added this node
         # for layerIx in range(indexFrom, indexTo + 1):
         #     for k, v in self.fileSystemItemToLegendNode.items():
