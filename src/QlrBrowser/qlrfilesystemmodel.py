@@ -43,12 +43,12 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
 
     # override data to return checkstate
     def data(self, index, role):
-        if role == QtCore.Qt.CheckStateRole and not self.isDir(index):
+        if index.isValid() and role == QtCore.Qt.CheckStateRole and not self.isDir(index):
             return  QtCore.Qt.Checked if QtCore.QPersistentModelIndex(index) in self.checkedItems else QtCore.Qt.Unchecked
         return super(QlrFileSystemModel, self).data(index, role)
 
     def setData(self, index, value, role=None, emitItemToggled = True):
-        if role == QtCore.Qt.CheckStateRole:
+        if index.isValid() and role == QtCore.Qt.CheckStateRole:
             persistentIndex = QtCore.QPersistentModelIndex(index)
             if value == QtCore.Qt.Checked:
                 self.checkedItems.add(persistentIndex)
@@ -66,7 +66,7 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
     # override flags to let items be checkable
     def flags(self, index):
         flags = super(QlrFileSystemModel, self).flags(index)
-        if index.column() == 0 and not self.isDir(index):
+        if index.isValid() and index.column() == 0 and not self.isDir(index):
             # If this is column 0 for a file return checkable plus default flags
             flags = flags | QtCore.Qt.ItemIsUserCheckable
         return flags

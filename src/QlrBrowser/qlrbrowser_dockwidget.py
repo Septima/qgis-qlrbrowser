@@ -36,7 +36,7 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
     closingPlugin = pyqtSignal()
     itemClicked = pyqtSignal(QModelIndex, int)
 
-    def __init__(self, parent=None):
+    def __init__(self, rootPath = None, parent=None):
         """Constructor."""
         super(QlrBrowserDockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -47,7 +47,7 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.setupUi(self)
 
         self.fileSystemModel = QlrFileSystemModel()
-        self.setRootPath('/Users/asger/Data/qlr/')
+        self.setRootPath(rootPath)
 
         self.fileSystemModel.itemToggled.connect(self.filesystemmodel_itemtoggled)
         self.treeView.doubleClicked.connect(self.treeview_doubleclicked)

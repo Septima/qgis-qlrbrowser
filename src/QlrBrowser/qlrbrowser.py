@@ -29,6 +29,8 @@ import resources
 # Import the code for the DockWidget
 from qlrbrowser_dockwidget import QlrBrowserDockWidget
 from qlrmanager import QlrManager
+from qlrbrowser_settingsdialog import QlrBrowserSettingsDialog
+from qlrbrowser_settings import QlrBrowserSettings
 import os.path
 
 
@@ -63,6 +65,9 @@ class QlrBrowser:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        # settings
+        self.settings = QlrBrowserSettings()
+
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Qlr Browser')
@@ -74,6 +79,7 @@ class QlrBrowser:
 
         # self.pluginIsActive = False
         self.dockwidget = None
+        self.qlrmanager = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -167,19 +173,19 @@ class QlrBrowser:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        # icon_path = ':/plugins/QlrBrowser/icon.png'
-        # self.add_action(
-        #    icon_path,
-        #    text=self.tr(u'Qlr Browser'),
-        #    callback=self.run,
-        #    parent=self.iface.mainWindow())
+        icon_path = ':/plugins/QlrBrowser/icon.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Settings'),
+            callback=self.showSettings,
+            parent=self.iface.mainWindow())
 
         # dockwidget may not exist if:
         #    first run of plugin
         #    removed on close (see self.onClosePlugin method)
         if self.dockwidget is None:
             # Create the dockwidget (after translation) and keep reference
-            self.dockwidget = QlrBrowserDockWidget()
+            self.dockwidget = QlrBrowserDockWidget(self.settings.value("baseDirectory"), self.iface.mainWindow())
             self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
         # connect to provide cleanup on closing of dockwidget
@@ -189,6 +195,18 @@ class QlrBrowser:
         # TODO: fix to allow choice of dock location
         self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
         self.dockwidget.show()
+
+    def showSettings(self):
+        # create and show the dialog
+        dlg = QlrBrowserSettingsDialog(self.iface.mainWindow())
+        # show the dialog
+        dlg.show()
+        result = dlg.exec_()
+        # See if OK was pressed
+        if result == 1:
+            self.dockwidget.setRootPath(self.settings.value("baseDirectory"))
+            self.qlrmanager.unload()
+            self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
     # --------------------------------------------------------------------------
 

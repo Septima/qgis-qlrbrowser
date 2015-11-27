@@ -46,14 +46,6 @@ class QlrManager():
         # Get events when user interacts with browser
         self.browser.itemClicked.connect(self.browser_itemclicked)
 
-
-    # Husk, vi kan hente data ud om et item gennem QModelIndex.data()!!!
-
-    # Kan vi koble QmodelIndex sammen med et(eller flere) lag. Lyt på layerTreeRoot.addedChildren som beskrevet
-    # http://www.lutraconsulting.co.uk/blog/2014/07/25/qgis-layer-tree-api-part-2/
-    # Husk at bruge QPersistentModelIndex (se qlrfilesystemmodel)
-
-
     def syncCheckedItems(self):
         # Loop through our list and update if layers have been removed
         for fileitem, nodehandle in self.fileSystemItemToLegendNode.items():
@@ -155,7 +147,6 @@ class QlrManager():
             return None
         else:
             raise("Wrong type")
-
 
     def unload(self):
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
