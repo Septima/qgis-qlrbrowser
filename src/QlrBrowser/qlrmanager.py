@@ -23,9 +23,13 @@
 __author__ = 'asger'
 
 from PyQt4.QtCore import Qt, pyqtSlot, QModelIndex, QPersistentModelIndex
-from qgis.core import QgsProject, QgsLayerDefinition
+from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer
+import random
+import string
 
 class QlrManager():
+    customPropertyName = "qlrbrowserid"
+
     def __init__(self, iface, qlrbrowser):
         self.iface = iface
         self.browser = qlrbrowser
@@ -43,42 +47,51 @@ class QlrManager():
         self.browser.itemClicked.connect(self.browser_itemclicked)
 
 
+    # Husk, vi kan hente data ud om et item gennem QModelIndex.data()!!!
 
     # Kan vi koble QmodelIndex sammen med et(eller flere) lag. Lyt på layerTreeRoot.addedChildren som beskrevet
     # http://www.lutraconsulting.co.uk/blog/2014/07/25/qgis-layer-tree-api-part-2/
     # Husk at bruge QPersistentModelIndex (se qlrfilesystemmodel)
 
+
     def syncCheckedItems(self):
         # Loop through our list and update if layers have been removed
-        for fileitem, layerid in self.fileSystemItemToLegendNode.items():
-            print "Checking layer id", layerid
-            treegroup = QgsProject.instance().layerTreeRoot()
-            node = treegroup.findLayer( layerid )
+        for fileitem, nodehandle in self.fileSystemItemToLegendNode.items():
+            # print "Checking node", nodehandle
+            node = self._getlayerTreeNode(nodehandle)
             if node is None:
-                print "Layer has been removed"
                 self.browser.toggleItem(fileitem)
                 self.fileSystemItemToLegendNode.pop(fileitem, None)
 
-
     def legend_layersremoved(self, node, indexFrom, indexTo):
-        print "REMOVED", node, indexFrom, indexTo
+        #print "REMOVED", node, indexFrom, indexTo
         # Ignore, if we removed this node
         if self.removingNode:
-            print "We removed this node our self"
+            #print "We removed this node our self"
             return
         self.syncCheckedItems()
 
     def legend_layersadded(self, node, indexFrom, indexTo):
-        print "WILL ADDXXXX", node, indexFrom, indexTo
+        #print "WILL ADDXXXX", node, indexFrom, indexTo
         # Are nodes being added by us?
         if self.modelIndexBeingAdded:
             # node is added by us
             if not indexFrom == indexTo:
                 raise("Yikes")
-            layerId = node.children()[indexFrom].layerId()
-            print "Adding layerId", layerId
-            self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = layerId
-        print self.fileSystemItemToLegendNode
+            addedNode = node.children()[indexFrom]
+            internalid = self._random_string()
+            nodehandle = {'internalid': internalid}
+            addedNode.setCustomProperty(QlrManager.customPropertyName, internalid)
+            if isinstance(addedNode, QgsLayerTreeGroup):
+                nodehandle['type'] = 'group'
+                nodehandle['name'] = addedNode.name()
+            elif isinstance(addedNode, QgsLayerTreeLayer):
+                nodehandle['type'] = 'layer'
+                nodehandle['name'] = addedNode.layerName()
+                nodehandle['layerid'] = addedNode.layerId()
+            #print "Adding layer", nodehandle
+            self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = nodehandle
+        # print self.fileSystemItemToLegendNode
 
     @pyqtSlot(QModelIndex, int)
     def browser_itemclicked(self, index, newState):
@@ -89,10 +102,9 @@ class QlrManager():
             # Item was unchecked. Remove node
             persistent = QPersistentModelIndex(indexItem)
             if self.fileSystemItemToLegendNode.has_key(persistent):
-                layerId = self.fileSystemItemToLegendNode[persistent]
-                print "Remove layerId", layerId
-                treegroup = QgsProject.instance().layerTreeRoot()
-                node = treegroup.findLayer( layerId )
+                nodehandle = self.fileSystemItemToLegendNode[persistent]
+                #print "Remove node", nodehandle
+                node = self._getlayerTreeNode(nodehandle)
                 if node:
                     try:
                         self.removingNode = True
@@ -111,6 +123,39 @@ class QlrManager():
                     QgsLayerDefinition.loadLayerDefinition(filePath, treegroup)
                 finally:
                     self.modelIndexBeingAdded = None
+
+    def _random_string(self):
+        return ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+
+    def _getgroupNodes(self, rootNode):
+        groupnodes = []
+        for n in rootNode.children():
+            #print "Checking node", n
+            if isinstance(n, QgsLayerTreeGroup):
+                #print n, "is a group node"
+                groupnodes.append(n)
+                groupnodes += self._getgroupNodes(n)
+        #print "all group nodes", groupnodes
+        return groupnodes
+
+    def _getlayerTreeNode(self, nodehandle):
+        root = QgsProject.instance().layerTreeRoot()
+        if nodehandle['type'] == 'layer':
+            node = root.findLayer( nodehandle['layerid'] )
+            return node
+        elif nodehandle['type'] == 'group':
+            for n in self._getgroupNodes(root):
+                #print "is ", n, "our group node?"
+                internalid = n.customProperty(QlrManager.customPropertyName)
+                #print "properties", n.customProperties()
+                #print "internalid", internalid
+                if internalid == nodehandle['internalid']:
+                    return n
+            # if we reach here we didnt find the group
+            return None
+        else:
+            raise("Wrong type")
+
 
     def unload(self):
         layerTreeRoot = QgsProject.instance().layerTreeRoot()

@@ -77,7 +77,6 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
     @pyqtSlot(QModelIndex, int)
     def filesystemmodel_itemtoggled(self, index, newState):
         indexItem = self.fileSystemModel.index(index.row(), 0, index.parent())
-        print "emitting itemClicked", indexItem, newState
         self.itemClicked.emit(indexItem, newState)
 
     @pyqtSlot(QModelIndex)
