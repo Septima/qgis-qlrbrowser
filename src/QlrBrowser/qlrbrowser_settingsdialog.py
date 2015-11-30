@@ -22,14 +22,24 @@
 """
 __author__ = 'asger'
 
+from qgissettingmanager import SettingDialog
+from qlrbrowser_settings import QlrBrowserSettings
 from PyQt4 import QtGui, uic
+import os
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'qlrbrowser_settings_base.ui'))
+    os.path.dirname(__file__), 'qlrbrowser_settingsdialog_base.ui'))
 
 class QlrBrowserSettingsDialog(QtGui.QDialog, FORM_CLASS, SettingDialog):
     def __init__(self, parent = None):
         super(QtGui.QDialog, self).__init__(parent)
         self.setupUi(self)
-        self.settings = MySettings()
-        SettingDialog.__init__(self, self.settings)
+        self.settings = QlrBrowserSettings()
+        SettingDialog.__init__(self, self.settings, setValueOnWidgetUpdate=True)
+
+        self.browseButton.clicked.connect(self.browse)
+
+    def browse(self):
+        directory = QtGui.QFileDialog.getExistingDirectory(self, self.trUtf8(u"Base directory"))
+        if directory:
+            self.baseDirectory.setText(directory)
