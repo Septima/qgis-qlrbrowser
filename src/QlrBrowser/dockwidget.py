@@ -71,7 +71,13 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         elif path in self.checked_paths:
             self.checked_paths.remove(path)
         if not oldState == newState:
-            self._fillTree()
+            iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
+            item = iterator.value()
+            while item:
+                if item.fullpath == path:
+                    item.setCheckState(0, Qt.Unchecked if not newState else Qt.Checked )
+                iterator += 1
+                item = iterator.value()
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_changed(self, item, column):
