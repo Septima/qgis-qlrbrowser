@@ -48,7 +48,7 @@ class QlrFileSystemModel(QtGui.QFileSystemModel):
         return super(QlrFileSystemModel, self).data(index, role)
 
     def setData(self, index, value, role=None, emitItemToggled = True):
-        if index.isValid() and role == QtCore.Qt.CheckStateRole:
+        if index.isValid() and role == QtCore.Qt.CheckStateRole and not self.isDir(index):
             persistentIndex = QtCore.QPersistentModelIndex(index)
             if value == QtCore.Qt.Checked:
                 self.checkedItems.add(persistentIndex)
