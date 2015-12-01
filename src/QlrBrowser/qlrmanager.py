@@ -22,7 +22,7 @@
 """
 __author__ = 'asger'
 
-from PyQt4.QtCore import Qt, pyqtSlot, QModelIndex, QPersistentModelIndex
+from PyQt4.QtCore import Qt, pyqtSlot, QModelIndex, QPersistentModelIndex, QCoreApplication
 from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer
 from qgis.gui import QgsMessageBar
 import random
@@ -114,7 +114,11 @@ class QlrManager():
                     self.modelIndexBeingAdded = QPersistentModelIndex(indexItem)
                     msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileName)
                     msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
+                    # Force show messageBar
+                    QCoreApplication.processEvents()
+                    # Load qlr
                     QgsLayerDefinition.loadLayerDefinition(filePath, self.layer_insertion_point())
+                    # Remove message
                     self.iface.messageBar().popWidget(msgItem)
 
                 finally:
