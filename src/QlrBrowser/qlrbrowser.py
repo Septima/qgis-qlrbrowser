@@ -27,7 +27,7 @@ from qgis.core import QgsProject, QgsLayerDefinition
 import resources
 
 # Import the code for the DockWidget
-from qlrbrowser_dockwidget import QlrBrowserDockWidget
+from dockwidget import DockWidget
 from qlrmanager import QlrManager
 from qlrbrowser_settingsdialog import QlrBrowserSettingsDialog
 from qlrbrowser_settings import QlrBrowserSettings
@@ -186,8 +186,9 @@ class QlrBrowser:
         #    removed on close (see self.onClosePlugin method)
         if self.dockwidget is None:
             # Create the dockwidget (after translation) and keep reference
-            self.dockwidget = QlrBrowserDockWidget(self.settings.value("baseDirectory"), self.iface.mainWindow())
-            self.qlrmanager = QlrManager(self.iface, self.dockwidget)
+            self.dockwidget = DockWidget( self.iface.mainWindow())
+            self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
+            #self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
         # connect to provide cleanup on closing of dockwidget
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)
