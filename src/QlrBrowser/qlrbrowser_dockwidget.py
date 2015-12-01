@@ -82,7 +82,7 @@ class QlrBrowserDockWidget(QtGui.QDockWidget, FORM_CLASS):
     @pyqtSlot(QModelIndex)
     def treeview_doubleclicked(self, index):
         indexItem = self.fileSystemModel.index(index.row(), 0, index.parent())
-        self.fileSystemModel.toggleChecked(indexItem)
+        self.fileSystemModel.toggleChecked(indexItem, True)
 
     def toggleItem(self, index):
         self.fileSystemModel.toggleChecked(index, False)
