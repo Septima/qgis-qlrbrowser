@@ -35,7 +35,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
 
-    itemStateChanged = pyqtSignal(str, bool)
+    itemStateChanged = pyqtSignal(object, bool)
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -51,6 +51,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.root_paths = set()
         self.file_system = {}
         self.checked_paths = set()
+
+        # Signals
+        self.treeWidget.itemChanged.connect(self._treeitem_changed)
 
     def addRootPath(self, path):
         self.root_paths.add(path)
@@ -71,17 +74,15 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             self._fillTree()
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
-    def _treeItem_check_changed(self, item, column):
+    def _treeitem_changed(self, item, column):
         checked = item.checkState(column) == Qt.Checked
         path = item.fullpath
-
         if checked:
             self.checked_paths.add(path)
         else:
             if path in self.checked_paths:
                 self.checked_paths.remove(path)
-
-        self.itemStateChanged.emit(path, checked)
+        self.itemStateChanged.emit(item.fileinfo, checked)
 
     def _fillTree(self):
         self.treeWidget.clear()
@@ -139,6 +140,7 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
     def __init__(self, fileinfo, checked = False):
         super(TreeWidgetItem, self).__init__()
         # Properties for display
+        self.fileinfo = fileinfo
         self.fullpath = fileinfo['fullpath']
         self.displayname = fileinfo['displayname']
         self.setIcon(0, fileinfo['icon'])

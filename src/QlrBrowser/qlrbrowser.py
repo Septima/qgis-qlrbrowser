@@ -188,7 +188,7 @@ class QlrBrowser:
             # Create the dockwidget (after translation) and keep reference
             self.dockwidget = DockWidget( self.iface.mainWindow())
             self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
-            #self.qlrmanager = QlrManager(self.iface, self.dockwidget)
+            self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
         # connect to provide cleanup on closing of dockwidget
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)

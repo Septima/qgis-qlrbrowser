@@ -27,6 +27,7 @@ from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLaye
 from qgis.gui import QgsMessageBar
 import random
 import string
+import os
 
 class QlrManager():
     customPropertyName = "qlrbrowserid"
@@ -45,7 +46,7 @@ class QlrManager():
         layerTreeRoot.removedChildren.connect(self.legend_layersremoved)
 
         # Get events when user interacts with browser
-        self.browser.itemClicked.connect(self.browser_itemclicked)
+        self.browser.itemStateChanged.connect(self.browser_itemclicked)
 
     def syncCheckedItems(self):
         # Loop through our list and update if layers have been removed
@@ -53,7 +54,7 @@ class QlrManager():
             # print "Checking node", nodehandle
             node = self._getlayerTreeNode(nodehandle)
             if node is None:
-                self.browser.toggleItem(fileitem)
+                self.browser.setPathCheckState(fileitem, False)
                 self.fileSystemItemToLegendNode.pop(fileitem, None)
 
     def legend_layersremoved(self, node, indexFrom, indexTo):
@@ -70,7 +71,7 @@ class QlrManager():
         if self.modelIndexBeingAdded:
             # node is added by us
             if not indexFrom == indexTo:
-                raise("Yikes")
+                raise Exception("Yikes")
             addedNode = node.children()[indexFrom]
             internalid = self._random_string()
             nodehandle = {'internalid': internalid}
@@ -86,16 +87,14 @@ class QlrManager():
             self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = nodehandle
         # print self.fileSystemItemToLegendNode
 
-    @pyqtSlot(QModelIndex, int)
-    def browser_itemclicked(self, index, newState):
-        indexItem = self.browser.fileSystemModel.index(index.row(), 0, index.parent())
-        fileName = self.browser.fileSystemModel.fileName(indexItem)
-        filePath = self.browser.fileSystemModel.filePath(indexItem)
-        if newState == Qt.Unchecked:
+    @pyqtSlot(object, int)
+    def browser_itemclicked(self, fileinfo, newState):
+        print "qlrmanager itemclicked", fileinfo
+        path = fileinfo['fullpath']
+        if newState == False:
             # Item was unchecked. Remove node
-            persistent = QPersistentModelIndex(indexItem)
-            if self.fileSystemItemToLegendNode.has_key(persistent):
-                nodehandle = self.fileSystemItemToLegendNode[persistent]
+            if self.fileSystemItemToLegendNode.has_key(path):
+                nodehandle = self.fileSystemItemToLegendNode[path]
                 #print "Remove node", nodehandle
                 node = self._getlayerTreeNode(nodehandle)
                 if node:
@@ -104,20 +103,20 @@ class QlrManager():
                         node.parent().removeChildNode(node)
                     finally:
                         self.removingNode = False
-                    self.fileSystemItemToLegendNode.pop(persistent, None)
+                    self.fileSystemItemToLegendNode.pop(path, None)
         else:
             # Item was checked
-            if self.browser.fileSystemModel.isDir(indexItem):
+            if fileinfo['type'] == 'dir':
                 pass
             else:
                 try:
-                    self.modelIndexBeingAdded = QPersistentModelIndex(indexItem)
-                    msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileName)
+                    self.modelIndexBeingAdded = path
+                    msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileinfo['displayname'])
                     msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
                     # Force show messageBar
                     QCoreApplication.processEvents()
                     # Load qlr
-                    QgsLayerDefinition.loadLayerDefinition(filePath, self.layer_insertion_point())
+                    QgsLayerDefinition.loadLayerDefinition(path, self.layer_insertion_point())
                     # Remove message
                     self.iface.messageBar().popWidget(msgItem)
 
