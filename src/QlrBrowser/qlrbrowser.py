@@ -228,6 +228,7 @@ class QlrBrowser:
         """Removes the plugin menu item and icon from QGIS GUI."""
 
         # print "** UNLOAD QlrBrowser"
+        self.iface.removeDockWidget(self.dockwidget)
 
         for action in self.actions:
             self.iface.removePluginMenu(
@@ -236,5 +237,3 @@ class QlrBrowser:
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
         del self.toolbar
-
-        self.qlrmanager.unload()
