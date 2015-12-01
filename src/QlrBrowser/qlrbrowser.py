@@ -178,7 +178,8 @@ class QlrBrowser:
             icon_path,
             text=self.tr(u'Settings'),
             callback=self.showSettings,
-            parent=self.iface.mainWindow())
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False)
 
         # dockwidget may not exist if:
         #    first run of plugin
