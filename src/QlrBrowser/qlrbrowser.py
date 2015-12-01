@@ -206,7 +206,10 @@ class QlrBrowser:
         result = dlg.exec_()
         # See if OK was pressed
         if result == 1:
-            self.dockwidget.setRootPath(self.settings.value("baseDirectory"))
+            # For now only one root path is supported by settingsdialog
+            for p in self.dockwidget.root_paths:
+                self.dockwidget.removeRootPath(p)
+            self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
             self.qlrmanager.unload()
             self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
