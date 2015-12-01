@@ -24,6 +24,7 @@ __author__ = 'asger'
 
 from PyQt4.QtCore import Qt, pyqtSlot, QModelIndex, QPersistentModelIndex
 from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer
+from qgis.gui import QgsMessageBar
 import random
 import string
 
@@ -109,12 +110,20 @@ class QlrManager():
             if self.browser.fileSystemModel.isDir(indexItem):
                 pass
             else:
-                treegroup = QgsProject.instance().layerTreeRoot()
                 try:
                     self.modelIndexBeingAdded = QPersistentModelIndex(indexItem)
-                    QgsLayerDefinition.loadLayerDefinition(filePath, treegroup)
+                    msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileName)
+                    msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
+                    QgsLayerDefinition.loadLayerDefinition(filePath, self.layer_insertion_point())
+                    self.iface.messageBar().popWidget(msgItem)
+
                 finally:
                     self.modelIndexBeingAdded = None
+
+    def layer_insertion_point(self):
+        # At the moment just return root
+        root = QgsProject.instance().layerTreeRoot()
+        return root
 
     def _random_string(self):
         return ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
