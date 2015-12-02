@@ -49,10 +49,15 @@ class QlrManager():
 
     def syncCheckedItems(self):
         # Loop through our list and update if layers have been removed
-        for fileitem, nodehandle in self.fileSystemItemToLegendNode.items():
+        for fileitem, nodes in self.fileSystemItemToLegendNode.items():
             # print "Checking node", nodehandle
-            node = self._getlayerTreeNode(nodehandle)
-            if node is None:
+            allRemoved = True
+            for nodeinfo in nodes:
+                node = self._getlayerTreeNode(nodeinfo)
+                if node is not None:
+                    allRemoved = False
+                    break
+            if allRemoved:
                 self.browser.toggleItem(fileitem)
                 self.fileSystemItemToLegendNode.pop(fileitem, None)
 
@@ -68,22 +73,24 @@ class QlrManager():
         #print "WILL ADDXXXX", node, indexFrom, indexTo
         # Are nodes being added by us?
         if self.modelIndexBeingAdded:
-            # node is added by us
-            if not indexFrom == indexTo:
-                raise("Yikes")
-            addedNode = node.children()[indexFrom]
-            internalid = self._random_string()
-            nodehandle = {'internalid': internalid}
-            addedNode.setCustomProperty(QlrManager.customPropertyName, internalid)
-            if isinstance(addedNode, QgsLayerTreeGroup):
-                nodehandle['type'] = 'group'
-                nodehandle['name'] = addedNode.name()
-            elif isinstance(addedNode, QgsLayerTreeLayer):
-                nodehandle['type'] = 'layer'
-                nodehandle['name'] = addedNode.layerName()
-                nodehandle['layerid'] = addedNode.layerId()
-            #print "Adding layer", nodehandle
-            self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = nodehandle
+            # node is added by us. (Can potentially be many unnested layers)
+            nodes = []
+            for index in range(indexFrom, indexTo + 1):
+                internalid = self._random_string()
+                nodeinfo = {'internalid': internalid}
+                addedNode = node.children()[index]
+                addedNode.setCustomProperty(QlrManager.customPropertyName, internalid)
+                if isinstance(addedNode, QgsLayerTreeGroup):
+                    nodeinfo['type'] = 'group'
+                    nodeinfo['name'] = addedNode.name()
+                elif isinstance(addedNode, QgsLayerTreeLayer):
+                    nodeinfo['type'] = 'layer'
+                    nodeinfo['name'] = addedNode.layerName()
+                    nodeinfo['layerid'] = addedNode.layerId()
+                nodes.append(nodeinfo)
+            #print "Adding layer", mapping
+            self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = nodes
+            self.modelIndexBeingAdded = None
         # print self.fileSystemItemToLegendNode
 
     @pyqtSlot(QModelIndex, int)
@@ -92,19 +99,20 @@ class QlrManager():
         fileName = self.browser.fileSystemModel.fileName(indexItem)
         filePath = self.browser.fileSystemModel.filePath(indexItem)
         if newState == Qt.Unchecked:
-            # Item was unchecked. Remove node
+            # Item was unchecked. Remove node(s)
             persistent = QPersistentModelIndex(indexItem)
             if self.fileSystemItemToLegendNode.has_key(persistent):
-                nodehandle = self.fileSystemItemToLegendNode[persistent]
+                nodes = self.fileSystemItemToLegendNode[persistent]
                 #print "Remove node", nodehandle
-                node = self._getlayerTreeNode(nodehandle)
-                if node:
-                    try:
-                        self.removingNode = True
-                        node.parent().removeChildNode(node)
-                    finally:
-                        self.removingNode = False
-                    self.fileSystemItemToLegendNode.pop(persistent, None)
+                for nodeinfo in nodes:
+                    node = self._getlayerTreeNode(nodeinfo)
+                    if node:
+                        try:
+                            self.removingNode = True
+                            node.parent().removeChildNode(node)
+                        finally:
+                            self.removingNode = False
+                self.fileSystemItemToLegendNode.pop(persistent, None)
         else:
             # Item was checked
             if self.browser.fileSystemModel.isDir(indexItem):
@@ -143,18 +151,18 @@ class QlrManager():
         #print "all group nodes", groupnodes
         return groupnodes
 
-    def _getlayerTreeNode(self, nodehandle):
+    def _getlayerTreeNode(self, nodeinfo):
         root = QgsProject.instance().layerTreeRoot()
-        if nodehandle['type'] == 'layer':
-            node = root.findLayer( nodehandle['layerid'] )
+        if nodeinfo['type'] == 'layer':
+            node = root.findLayer( nodeinfo['layerid'] )
             return node
-        elif nodehandle['type'] == 'group':
+        elif nodeinfo['type'] == 'group':
             for n in self._getgroupNodes(root):
                 #print "is ", n, "our group node?"
                 internalid = n.customProperty(QlrManager.customPropertyName)
                 #print "properties", n.customProperties()
                 #print "internalid", internalid
-                if internalid == nodehandle['internalid']:
+                if internalid == nodeinfo['internalid']:
                     return n
             # if we reach here we didnt find the group
             return None
