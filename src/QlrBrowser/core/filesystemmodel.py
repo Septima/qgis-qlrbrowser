@@ -1,7 +1,8 @@
 __author__ = 'asger'
 
-from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject
+from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
 from PyQt4.QtGui import QFileIconProvider
+from PyQt4.QtXml import QDomDocument
 
 class FileSystemModel(QObject):
 
@@ -23,6 +24,8 @@ class FileSystemModel(QObject):
 
 class FileSystemItem(QObject):
     iconProvider = QFileIconProvider()
+    fileExtensions = ['*.qlr']
+    xmlSearchableTags = ['title', 'abstract','layername', 'attribution']
 
     def __init__(self, file, recurse = True):
         super(FileSystemItem, self).__init__()
@@ -39,18 +42,18 @@ class FileSystemItem(QObject):
         self.children = [] if self.isdir else None
         if self.isdir and recurse:
             qdir = QDir(self.fullpath)
-            for finfo in qdir.entryInfoList(['*.qlr'], QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
+            for finfo in qdir.entryInfoList( FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
                 self.children.append(FileSystemItem(finfo, recurse))
         else:
             # file
-            # Maybe get file contents?
-            pass
+            # Populate this if and when needed
+            self.searchablecontent = None
 
     def filtered(self, filter):
         if not filter:
             return self
-
-        namematch = filter.lower() in self.basename.lower() or filter.lower() in self.displayname.lower()
+        filterlower = filter.lower()
+        namematch = filterlower in self.basename.lower() or filterlower in self.displayname.lower()
         if self.isdir:
             diritem = FileSystemItem(self.fullpath, False)
             for child in self.children:
@@ -61,7 +64,32 @@ class FileSystemItem(QObject):
             if namematch or len(diritem.children) > 0:
                 return diritem
         else:
-            if namematch:
+            if self.searchablecontent is None:
+                self.searchablecontent = self.get_searchable_content().lower()
+            if namematch or filterlower in self.searchablecontent:
                 return FileSystemItem(self.fullpath, False)
-            # TODO: Check file contents?
         return None
+
+    def get_searchable_content(self):
+        f = QFile(self.fileinfo.absoluteFilePath())
+        f.open(QIODevice.ReadOnly)
+        #stream = QTextStream(f)
+        #stream.setCodec("UTF-8")
+        try:
+            doc = QDomDocument()
+            doc.setContent( f.readAll() )
+            docelt = doc.documentElement()
+
+            texts = []
+
+            for tagName in FileSystemItem.xmlSearchableTags:
+                nodes = docelt.elementsByTagName(tagName)
+                for i in range(nodes.count()):
+                    node = nodes.at(i)
+                    value = node.firstChild().toText().data()
+                    #print value
+                    texts.append( value )
+
+            return u' '.join(texts)
+        finally:
+            f.close()
