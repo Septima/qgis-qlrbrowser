@@ -90,7 +90,7 @@ class QlrManager():
     @pyqtSlot(object, int)
     def browser_itemclicked(self, fileinfo, newState):
         print "qlrmanager itemclicked", fileinfo
-        path = fileinfo['fullpath']
+        path = fileinfo.fullpath
         if newState == False:
             # Item was unchecked. Remove node
             if self.fileSystemItemToLegendNode.has_key(path):
@@ -106,12 +106,12 @@ class QlrManager():
                     self.fileSystemItemToLegendNode.pop(path, None)
         else:
             # Item was checked
-            if fileinfo['type'] == 'dir':
+            if fileinfo.isdir:
                 pass
             else:
                 try:
                     self.modelIndexBeingAdded = path
-                    msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileinfo['displayname'])
+                    msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileinfo.displayname)
                     msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
                     # Force show messageBar
                     QCoreApplication.processEvents()

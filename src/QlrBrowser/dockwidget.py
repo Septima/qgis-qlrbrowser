@@ -25,6 +25,7 @@ import os
 
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt
+from .core.filesystemmodel import FileSystemModel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'dockwidget.ui'))
@@ -57,12 +58,15 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     def addRootPath(self, path):
         self.root_paths.add(path)
-        self._updateFileSystemStructure(path)
-        self._fillTree()
+        fs = FileSystemModel()
+        self.file_system[path] = fs
+        fs.updated.connect(self._fillTree)
+        fs.setRootPath(path)
 
     def removeRootPath(self, path):
         self.root_paths.remove(path)
-        self.file_system.pop(path, None)
+        fs = self.file_system.pop(path, None)
+        fs.updated.disconnect(self._fillTree())
 
     def setPathCheckState(self, path, newState):
         oldState = path in self.checked_paths
@@ -88,52 +92,38 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         else:
             if path in self.checked_paths:
                 self.checked_paths.remove(path)
-        self.itemStateChanged.emit(item.fileinfo, checked)
+        self.itemStateChanged.emit(item.fileitem, checked)
 
     def _fillTree(self):
         self.treeWidget.clear()
 
         for basepath in self.root_paths:
-            fileItem = self._filteredFileItems(basepath)
-            baseTreeItem = self._createWidgetItem(fileItem)
-            self._fillTreeRecursively(baseTreeItem, fileItem)
-            self.treeWidget.addTopLevelItem(baseTreeItem)
+            fileitem = self._filteredFileItems(basepath)
+            if fileitem:
+                baseTreeItem = self._createWidgetItem(fileitem)
+                self._fillTreeRecursively(baseTreeItem, fileitem)
+                self.treeWidget.addTopLevelItem(baseTreeItem)
 
     def _filteredFileItems(self, basepath):
         # For now just return unfiltered
-        return self.file_system[basepath]['files']
+        fs =  self.file_system[basepath]
+        if False:
+            return fs.rootitem.filtered("filter")
+        else:
+            return fs.rootitem
 
     def _fillTreeRecursively(self, baseWidgetItem, baseFileItem):
-        if baseFileItem['type'] == 'qlr':
+        if not baseFileItem.isdir:
             return
-        for child in baseFileItem['children']:
-            childItem = self._createWidgetItem(child)
-            if child['type'] == 'dir':
-                self._fillTreeRecursively(childItem, child)
-            baseWidgetItem.addChild(childItem)
+        for child in baseFileItem.children:
+            childTreeItem = self._createWidgetItem(child)
+            if child.isdir:
+                self._fillTreeRecursively(childTreeItem, child)
+            baseWidgetItem.addChild(childTreeItem)
 
-    def _updateFileSystemStructure(self, root_path):
-        self.file_system[root_path] = {'files': self._traverseFileSystem(QFileInfo(root_path))}
-
-    def _traverseFileSystem(self, qfileinfo):
-        item = { 'fullpath': qfileinfo.absoluteFilePath(),
-                 'icon': DockWidget.iconProvider.icon(qfileinfo),
-                 'displayname': qfileinfo.baseName()}
-
-        if qfileinfo.isDir():
-            qdir = QDir(qfileinfo.absoluteFilePath())
-            item['type'] = 'dir'
-            item['children'] = []
-            for subdirinfo in qdir.entryInfoList(['*.qlr'], QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
-                item['children'].append( self._traverseFileSystem(subdirinfo) )
-        else:
-            # It is a file
-            item['type'] = 'file'
-        return item
-
-    def _createWidgetItem(self, fileinfo):
-        checked = fileinfo['fullpath'] in self.checked_paths
-        return TreeWidgetItem(fileinfo, checked)
+    def _createWidgetItem(self, fileitem):
+        checked = fileitem.fullpath in self.checked_paths
+        return TreeWidgetItem(fileitem, checked)
 
     #
     # Events
@@ -143,15 +133,15 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         event.accept()
 
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
-    def __init__(self, fileinfo, checked = False):
+    def __init__(self, fileitem, checked = False):
         super(TreeWidgetItem, self).__init__()
         # Properties for display
-        self.fileinfo = fileinfo
-        self.fullpath = fileinfo['fullpath']
-        self.displayname = fileinfo['displayname']
-        self.setIcon(0, fileinfo['icon'])
+        self.fileitem = fileitem
+        self.fullpath = fileitem.fullpath
+        self.displayname = fileitem.displayname
+        self.setIcon(0, fileitem.icon)
         self.setToolTip(0, self.fullpath)
         self.setText(0, self.displayname)
         self.setCheckState(0, Qt.Unchecked if not checked else Qt.Checked )
-        if not fileinfo['type'] == 'dir':
+        if not fileitem.isdir:
             self.setFlags(self.flags() | Qt.ItemIsUserCheckable)
