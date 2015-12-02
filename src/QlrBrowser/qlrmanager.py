@@ -89,7 +89,7 @@ class QlrManager():
 
     @pyqtSlot(object, int)
     def browser_itemclicked(self, fileinfo, newState):
-        print "qlrmanager itemclicked", fileinfo
+        # print "qlrmanager itemclicked", fileinfo
         path = fileinfo.fullpath
         if newState == False:
             # Item was unchecked. Remove node

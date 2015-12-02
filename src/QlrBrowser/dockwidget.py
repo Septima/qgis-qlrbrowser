@@ -48,6 +48,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
+        # UI
+        self.filterLineEdit.setPlaceholderText(u'Filter')
+
         # Properties
         self.root_paths = set()
         self.file_system = {}
@@ -55,6 +58,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         # Signals
         self.treeWidget.itemChanged.connect(self._treeitem_changed)
+        self.filterLineEdit.textChanged.connect(self._fillTree)
 
     def addRootPath(self, path):
         self.root_paths.add(path)
@@ -103,12 +107,24 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                 baseTreeItem = self._createWidgetItem(fileitem)
                 self._fillTreeRecursively(baseTreeItem, fileitem)
                 self.treeWidget.addTopLevelItem(baseTreeItem)
+        if self.filterLineEdit.text().strip():
+            self._expandTree()
+
+    def _expandTree(self):
+        iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
+        item = iterator.value()
+        while item:
+            if item.fileitem.isdir:
+                item.setExpanded(True)
+            iterator += 1
+            item = iterator.value()
 
     def _filteredFileItems(self, basepath):
         # For now just return unfiltered
         fs =  self.file_system[basepath]
-        if False:
-            return fs.rootitem.filtered("filter")
+        filterText = self.filterLineEdit.text().strip()
+        if filterText:
+            return fs.rootitem.filtered(filterText)
         else:
             return fs.rootitem
 
@@ -143,5 +159,7 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
         self.setToolTip(0, self.fullpath)
         self.setText(0, self.displayname)
         self.setCheckState(0, Qt.Unchecked if not checked else Qt.Checked )
-        if not fileitem.isdir:
+        if fileitem.isdir:
+            pass
+        else:
             self.setFlags(self.flags() | Qt.ItemIsUserCheckable)

@@ -50,11 +50,11 @@ class FileSystemItem(QObject):
         if not filter:
             return self
 
-        namematch = filter.tolower() in self.basename.tolower() or filter.tolower() in self.displayname.tolower()
+        namematch = filter.lower() in self.basename.lower() or filter.lower() in self.displayname.lower()
         if self.isdir:
             diritem = FileSystemItem(self.fullpath, False)
             for child in self.children:
-                childmatch = child.matches(filter)
+                childmatch = child.filtered(filter)
                 if childmatch is not None:
                     diritem.children.append((childmatch))
             # is dir a match?
