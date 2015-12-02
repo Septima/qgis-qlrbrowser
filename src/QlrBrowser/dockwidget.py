@@ -57,6 +57,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.checked_paths = set()
 
         # Signals
+        self.treeWidget.itemDoubleClicked.connect(self._treeitem_doubleclicked)
         self.treeWidget.itemChanged.connect(self._treeitem_changed)
         self.filterLineEdit.textChanged.connect(self._fillTree)
 
@@ -86,6 +87,11 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                     item.setCheckState(0, Qt.Unchecked if not newState else Qt.Checked )
                 iterator += 1
                 item = iterator.value()
+
+    @pyqtSlot(QtGui.QTreeWidgetItem, int)
+    def _treeitem_doubleclicked(self, item, column):
+        newState = Qt.Checked if item.checkState(column) == Qt.Unchecked else Qt.Unchecked
+        item.setCheckState(column, newState)
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_changed(self, item, column):
