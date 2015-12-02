@@ -50,6 +50,8 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         # UI
         self.filterLineEdit.setPlaceholderText(u'Filter')
+        self.treeWidget.setColumnCount(1)
+        self.treeWidget.header().hide()
 
         # Properties
         self.root_paths = set()
