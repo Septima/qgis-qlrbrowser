@@ -115,6 +115,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                 baseTreeItem = self._createWidgetItem(fileitem)
                 self._fillTreeRecursively(baseTreeItem, fileitem)
                 self.treeWidget.addTopLevelItem(baseTreeItem)
+                baseTreeItem.setExpanded(True)
         if self.filterLineEdit.text().strip():
             self._expandTree()
 
