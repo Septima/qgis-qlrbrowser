@@ -25,7 +25,7 @@ import os
 
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt
-from .core.filesystemmodel import FileSystemModel
+from ..core.filesystemmodel import FileSystemModel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'dockwidget.ui'))

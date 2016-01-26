@@ -20,18 +20,20 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt, pyqtSlot, QModelIndex
+from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtGui import QAction, QIcon
-from qgis.core import QgsProject, QgsLayerDefinition
-# Initialize Qt resources from file resources.py
-import resources
-
-# Import the code for the DockWidget
-from dockwidget import DockWidget
-from qlrmanager import QlrManager
-from qlrbrowser_settingsdialog import QlrBrowserSettingsDialog
-from qlrbrowser_settings import QlrBrowserSettings
 import os.path
+
+# Import manager
+from .core.qlrmanager import QlrManager
+
+# Import the code for ui
+from .ui.dockwidget import DockWidget
+from .ui.qlrbrowser_settingsdialog import QlrBrowserSettingsDialog
+from .ui.qlrbrowser_settings import QlrBrowserSettings
+
+# Import resources. Needed even when it is not referenced anywhere
+import resources
 
 
 class QlrBrowser:

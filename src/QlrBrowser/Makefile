@@ -150,7 +150,9 @@ package: compile
 	@echo "Exporting plugin to zip package.	"
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME).zip
-	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	#git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	# Our py-files are in src/
+	cd ../..; git archive -o $(PLUGINNAME).zip $(VERSION):src
 	echo "Created package: $(PLUGINNAME).zip"
 
 upload: zip

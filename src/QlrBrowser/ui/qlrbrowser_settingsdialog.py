@@ -22,7 +22,7 @@
 """
 __author__ = 'asger'
 
-from qgissettingmanager import SettingDialog
+from ..qgissettingmanager import SettingDialog
 from qlrbrowser_settings import QlrBrowserSettings
 from PyQt4 import QtGui, uic
 import os

@@ -22,12 +22,11 @@
 """
 __author__ = 'asger'
 
-from PyQt4.QtCore import Qt, pyqtSlot, QModelIndex, QPersistentModelIndex, QCoreApplication
+from PyQt4.QtCore import pyqtSlot, QCoreApplication
 from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer
 from qgis.gui import QgsMessageBar
 import random
 import string
-import os
 
 class QlrManager():
     customPropertyName = "qlrbrowserid"
