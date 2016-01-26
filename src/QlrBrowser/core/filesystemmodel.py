@@ -90,6 +90,15 @@ class FileSystemItem(QObject):
                     #print value
                     texts.append( value )
 
+            # Add keywords
+            nodes = docelt.elementsByTagName("keywordList")
+            for i in range(nodes.count()):
+                kwnode = nodes.at(i)
+                valnodes = kwnode.toElement().elementsByTagName("value")
+                for j in range(valnodes.count()):
+                    value = valnodes.at(j).firstChild().toText().data()
+                    texts.append(value)
+
             return u' '.join(texts)
         finally:
             f.close()
