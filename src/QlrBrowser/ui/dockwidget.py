@@ -73,7 +73,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
     def removeRootPath(self, path):
         self.root_paths.remove(path)
         fs = self.file_system.pop(path, None)
-        fs.updated.disconnect(self._fillTree())
+        fs.updated.disconnect(self._fillTree)
 
     def setPathCheckState(self, path, newState):
         oldState = path in self.checked_paths

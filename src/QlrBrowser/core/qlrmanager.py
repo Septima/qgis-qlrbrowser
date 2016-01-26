@@ -173,4 +173,4 @@ class QlrManager():
         layerTreeRoot.removedChildren.disconnect(self.legend_layersremoved)
 
         # Get events when user interacts with browser
-        self.browser.itemClicked.disconnect(self.browser_itemclicked)
+        self.browser.itemStateChanged.disconnect(self.browser_itemclicked)
