@@ -21,11 +21,13 @@
  ***************************************************************************/
 """
 __author__ = 'asger'
-from src.QlrBrowser.qgissettingmanager import *
+from ..qgissettingmanager import *
+import os
 
 pluginName = "qlrbrowser"
 
 class QlrBrowserSettings(SettingManager):
     def __init__(self):
         SettingManager.__init__(self, pluginName)
-        self.addSetting("baseDirectory", "string", "global", "")
+        # Set default baseDirectory to users "home" dir
+        self.addSetting("baseDirectory", "string", "global", os.path.expanduser("~"))
