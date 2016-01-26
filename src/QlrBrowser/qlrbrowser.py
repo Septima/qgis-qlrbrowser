@@ -20,9 +20,10 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os.path
+
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtGui import QAction, QIcon
-import os.path
 
 # Import manager
 from .core.qlrmanager import QlrManager
@@ -30,11 +31,10 @@ from .core.qlrmanager import QlrManager
 # Import the code for ui
 from .ui.dockwidget import DockWidget
 from .ui.qlrbrowser_settingsdialog import QlrBrowserSettingsDialog
-from .ui.qlrbrowser_settings import QlrBrowserSettings
+from .core.qlrbrowser_settings import QlrBrowserSettings
 
 # Import resources. Needed even when it is not referenced anywhere
 import resources
-
 
 class QlrBrowser:
     """QGIS Plugin Implementation."""
