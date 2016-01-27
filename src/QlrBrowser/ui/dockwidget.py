@@ -23,7 +23,7 @@
 
 import os
 from PyQt4 import QtGui, uic
-from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt
+from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer
 from ..core.filesystemmodel import FileSystemModel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -60,7 +60,14 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         # Signals
         self.treeWidget.itemDoubleClicked.connect(self._treeitem_doubleclicked)
         self.treeWidget.itemChanged.connect(self._treeitem_changed)
-        self.filterLineEdit.textChanged.connect(self._fillTree)
+
+        # Search
+        self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.setInterval(500)
+        self.timer.timeout.connect( self._fillTree )
+        #self.filterLineEdit.textChanged.connect(self._fillTree)
+        self.filterLineEdit.textChanged.connect( self.timer.start)
 
     def addRootPath(self, path):
         self.root_paths.add(path)
