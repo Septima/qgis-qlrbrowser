@@ -14,7 +14,7 @@ class FileSystemModel(QObject):
         self.rootitem = None
 
     def setRootPath(self, path):
-        self.rootpath = path
+        self.rootpath = path.rstrip('/\\')
         # Start filling
         self.update()
 
