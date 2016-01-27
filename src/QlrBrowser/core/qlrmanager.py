@@ -117,6 +117,7 @@ class QlrManager():
                 pass
             else:
                 try:
+                    # This is used by our self to signal (to ourselves) that we are in the process of adding a layer now
                     self.modelIndexBeingAdded = path
                     msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileinfo.displayname)
                     msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
@@ -124,9 +125,10 @@ class QlrManager():
                     QCoreApplication.processEvents()
                     # Load qlr
                     QgsLayerDefinition.loadLayerDefinition(path, self.layer_insertion_point())
+                    # This is backwards, but qlr is always loaded at the bottom of the TOC
+                    self._move_qlr_to_top(path)
                     # Remove message
                     self.iface.messageBar().popWidget(msgItem)
-
                 finally:
                     self.modelIndexBeingAdded = None
 
@@ -134,6 +136,23 @@ class QlrManager():
         # At the moment just return root
         root = QgsProject.instance().layerTreeRoot()
         return root
+
+    def _move_qlr_to_top(self, qlrpath):
+        """Moves the layers added to the TOC from the given QLR file. For now always to the top of the TOC"""
+        # Only supports moving layer to the top of the TOC.
+        for nodeinfo in self.fileSystemItemToLegendNode[qlrpath]:
+            node = self._getlayerTreeNode(nodeinfo)
+            self._move_toc_layer(node)
+
+    def _move_toc_layer(self, node):
+        # See http://gis.stackexchange.com/questions/134284/how-to-move-layers-in-the-qgis-table-of-contents-via-pyqgis
+        # Clone and insert at right place
+        myClone = node.clone()
+        treeRoot = QgsProject.instance().layerTreeRoot()
+        treeRoot.insertChildNode(0, myClone)
+        # Delete old
+        parent = node.parent()
+        parent.removeChildNode(node)
 
     def _random_string(self):
         return ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
