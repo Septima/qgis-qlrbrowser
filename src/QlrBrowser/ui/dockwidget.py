@@ -60,6 +60,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         # Signals
         self.treeWidget.itemDoubleClicked.connect(self._treeitem_doubleclicked)
         self.treeWidget.itemChanged.connect(self._treeitem_changed)
+        self.refreshButton.clicked.connect(self.reloadFileSystemInfo)
 
         # Search
         self.timer = QTimer(self)
@@ -95,6 +96,10 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
     def getNumCheckedSubPaths(self, path):
         count = sum( (1 for x in self.checked_paths if x.startswith(path)) )
         return count
+
+    def reloadFileSystemInfo(self):
+        for fs in self.file_system.values():
+            fs.update()
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_doubleclicked(self, item, column):
