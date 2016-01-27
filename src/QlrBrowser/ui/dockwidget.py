@@ -22,7 +22,6 @@
 """
 
 import os
-
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt
 from ..core.filesystemmodel import FileSystemModel
@@ -81,14 +80,14 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             self.checked_paths.add(path)
         elif path in self.checked_paths:
             self.checked_paths.remove(path)
-        if not oldState == newState:
-            iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
-            item = iterator.value()
-            while item:
-                if item.fullpath == path:
-                    item.setCheckState(0, Qt.Unchecked if not newState else Qt.Checked )
-                iterator += 1
-                item = iterator.value()
+        self._updateTree(path)
+
+    def getIsPathChecked(self, path):
+        return path in self.checked_paths
+
+    def getNumCheckedSubPaths(self, path):
+        count = sum( (1 for x in self.checked_paths if x.startswith(path)) )
+        return count
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_doubleclicked(self, item, column):
@@ -99,12 +98,26 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
     def _treeitem_changed(self, item, column):
         checked = item.checkState(column) == Qt.Checked
         path = item.fullpath
-        if checked:
-            self.checked_paths.add(path)
-        else:
-            if path in self.checked_paths:
-                self.checked_paths.remove(path)
+        self.setPathCheckState(path, checked)
         self.itemStateChanged.emit(item.fileitem, checked)
+
+    def _updateTree(self, filter_path = None):
+        # Updates tree display
+        # Optionally only the branch which includes filter_path
+        iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
+        item = iterator.value()
+        while item:
+            # Skip if we only need to update part of tree
+            if not filter_path or filter_path.startswith(item.fullpath):
+                # checked sub paths
+                if item.fileitem.isdir:
+                    num = self.getNumCheckedSubPaths(item.fullpath)
+                    item.setSubChecked(num)
+                # checked
+                checked = self.getIsPathChecked(item.fullpath)
+                item.setCheckState(0, Qt.Unchecked if not checked else Qt.Checked )
+            iterator += 1
+            item = iterator.value()
 
     def _fillTree(self):
         self.treeWidget.clear()
@@ -147,8 +160,11 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             baseWidgetItem.addChild(childTreeItem)
 
     def _createWidgetItem(self, fileitem):
-        checked = fileitem.fullpath in self.checked_paths
-        return TreeWidgetItem(fileitem, checked)
+        checked = self.getIsPathChecked(fileitem.fullpath)
+        num_checked_sub_paths = 0
+        if fileitem.isdir:
+            num_checked_sub_paths = self.getNumCheckedSubPaths(fileitem.fullpath)
+        return TreeWidgetItem(fileitem, checked, num_checked_sub_paths)
 
     #
     # Events
@@ -158,17 +174,36 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         event.accept()
 
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
-    def __init__(self, fileitem, checked = False):
+    def __init__(self, fileitem, checked = False, checked_sub_paths = 0):
         super(TreeWidgetItem, self).__init__()
         # Properties for display
         self.fileitem = fileitem
         self.fullpath = fileitem.fullpath
-        self.displayname = fileitem.displayname
+        self.displayname = None
+        self.subchecked = checked_sub_paths
         self.setIcon(0, fileitem.icon)
         self.setToolTip(0, self.fullpath)
-        self.setText(0, self.displayname)
         self.setCheckState(0, Qt.Unchecked if not checked else Qt.Checked )
         if fileitem.isdir:
             pass
         else:
             self.setFlags(self.flags() | Qt.ItemIsUserCheckable)
+        self.updateDisplay()
+
+    def updateDisplay(self):
+        name = self.fileitem.displayname
+        font = self.font(0)
+        font.setBold(False)
+        if self.fileitem.isdir:
+            if self.subchecked:
+                name += ' ({0})'.format(self.subchecked)
+                font.setBold(True)
+        self.displayname = name
+        self.setText(0, name)
+        self.setFont(0, font)
+
+    def setSubChecked(self, num):
+        self.subchecked = num
+        self.updateDisplay()
+
+
