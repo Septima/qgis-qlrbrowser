@@ -58,7 +58,7 @@ class QlrBrowser:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'QlrBrowser_{}.qm'.format(locale))
+            '{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()

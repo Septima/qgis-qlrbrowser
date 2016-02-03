@@ -48,7 +48,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.setupUi(self)
 
         # UI
-        self.filterLineEdit.setPlaceholderText(u'Filter')
+        self.filterLineEdit.setPlaceholderText( self.trUtf8(u'Filter'))
         self.treeWidget.setColumnCount(1)
         self.treeWidget.header().hide()
 

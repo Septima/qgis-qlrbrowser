@@ -26,12 +26,12 @@
 #Add iso code for any locales you want to support here (space separated)
 # default is no locales
 # LOCALES = af
-LOCALES =
+LOCALES = da
 
 # If locales are enabled, set the name of the lrelease binary on your system. If
 # you have trouble compiling the translations, you may have to specify the full path to
 # lrelease
-#LRELEASE = lrelease
+LRELEASE = lrelease
 #LRELEASE = lrelease-qt4
 
 
@@ -46,7 +46,9 @@ PY_FILES = \
 	__init__.py \
 	qlrbrowser.py qlrbrowser_dockwidget.py
 
-UI_FILES = qlrbrowser_dockwidget_base.ui
+UI_FILES = \
+    ui/dockwidget.ui \
+    ui/qlrbrowser_settingsdialog_base.ui
 
 EXTRAS = metadata.txt icon.png
 

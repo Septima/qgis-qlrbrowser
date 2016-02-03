@@ -51,10 +51,10 @@
        <item>
         <widget class="QToolButton" name="refreshButton">
          <property name="toolTip">
-          <string>Genindlæs qlr-filer</string>
+          <string>Reload qlr files</string>
          </property>
          <property name="text">
-          <string>Genindlæs</string>
+          <string>Reload</string>
          </property>
          <property name="icon">
           <iconset>
