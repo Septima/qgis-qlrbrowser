@@ -10,11 +10,11 @@
 name=Qlr Browser
 qgisMinimumVersion=2.0
 description=This plugin lets the user browse and open qlr files
-version=0.1
+version=0.2.0
 author=Asger Skovbo Petersen, Septima
 email=asger@septima.dk
 
-about=XXXXX.....Long description of plugin purpose....XXXXXX
+about=This plugin enables a layer menu in a nested tree structure based on .qlr files. The layer tree is nested according to the location in folder/subfolder of the .qlr files.
 
 tracker=https://github.com/Septima/qgis-qlrbrowser/issues
 repository=https://github.com/Septima/qgis-qlrbrowser
@@ -23,16 +23,18 @@ repository=https://github.com/Septima/qgis-qlrbrowser
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=
+    2016-02-03 0.2.0 Bugfixes and better packaging
+    2015-12-12 0.1.0 Initial version
 
 # Tags are comma separated with spaces allowed
-tags=qlr browser
+tags=qlr browse
 
 homepage=https://github.com/Septima/qgis-qlrbrowser
 category=Plugins
 icon=icon.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
