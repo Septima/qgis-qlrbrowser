@@ -125,8 +125,10 @@ class QlrManager():
                     QCoreApplication.processEvents()
                     # Load qlr
                     QgsLayerDefinition.loadLayerDefinition(path, self.layer_insertion_point())
-                    # This is backwards, but qlr is always loaded at the bottom of the TOC
-                    self._move_qlr_to_top(path)
+                    # Lets see if we catched the loaded layer. If not - it could be because the qlrfile was moved
+                    if path in self.fileSystemItemToLegendNode:
+                        # This is backwards, but qlr is always loaded at the bottom of the TOC
+                        self._move_qlr_to_top(path)
                     # Remove message
                     self.iface.messageBar().popWidget(msgItem)
                 finally:
@@ -139,6 +141,8 @@ class QlrManager():
 
     def _move_qlr_to_top(self, qlrpath):
         """Moves the layers added to the TOC from the given QLR file. For now always to the top of the TOC"""
+        if not qlrpath in self.fileSystemItemToLegendNode:
+            return
         # Only supports moving layer to the top of the TOC.
         for nodeinfo in self.fileSystemItemToLegendNode[qlrpath]:
             node = self._getlayerTreeNode(nodeinfo)

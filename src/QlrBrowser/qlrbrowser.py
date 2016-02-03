@@ -188,7 +188,7 @@ class QlrBrowser:
         #    removed on close (see self.onClosePlugin method)
         if self.dockwidget is None:
             # Create the dockwidget (after translation) and keep reference
-            self.dockwidget = DockWidget( self.iface.mainWindow())
+            self.dockwidget = DockWidget( self.iface)
             self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
             self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 

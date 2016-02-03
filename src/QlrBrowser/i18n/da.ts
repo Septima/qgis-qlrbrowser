@@ -29,9 +29,19 @@
 <context>
     <name>DockWidget</name>
     <message>
-        <location filename="dockwidget.py" line="51"/>
+        <location filename="dockwidget.py" line="55"/>
         <source>Filter</source>
         <translation>Filtrér</translation>
+    </message>
+    <message>
+        <location filename="dockwidget.py" line="197"/>
+        <source>Qlr Browser Error</source>
+        <translation>Qlr Browser fejl</translation>
+    </message>
+    <message>
+        <location filename="dockwidget.py" line="197"/>
+        <source>The selected path does not exist anymore</source>
+        <translation>Den valgte sti eksisterer ikke længere</translation>
     </message>
 </context>
 <context>

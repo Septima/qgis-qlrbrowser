@@ -24,6 +24,7 @@
 import os
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer
+from qgis._gui import QgsMessageBar
 from ..core.filesystemmodel import FileSystemModel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -37,8 +38,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     itemStateChanged = pyqtSignal(object, bool)
 
-    def __init__(self, parent=None):
+    def __init__(self, iface=None):
         """Constructor."""
+        parent = None if iface is None else iface.mainWindow()
         super(DockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
         # After setupUI you can access any designer object by doing
@@ -46,6 +48,8 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+        self.iface = iface
 
         # UI
         self.filterLineEdit.setPlaceholderText( self.trUtf8(u'Filter'))
@@ -112,6 +116,12 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
     def _treeitem_changed(self, item, column):
         checked = item.checkState(column) == Qt.Checked
         path = item.fullpath
+        if checked:
+            # Dont try to turn on a non-existing qlr
+            if not self._checkFileItemExists(path):
+                # Path no longer exists. Reload filesystem
+                self.reloadFileSystemInfo()
+                return
         self.setPathCheckState(path, checked)
         self.itemStateChanged.emit(item.fileitem, checked)
 
@@ -179,6 +189,16 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         if fileitem.isdir:
             num_checked_sub_paths = self.getNumCheckedSubPaths(fileitem.fullpath)
         return TreeWidgetItem(fileitem, checked, num_checked_sub_paths)
+
+    def _checkFileItemExists(self, path):
+        if os.path.exists(path):
+            return True
+        else:
+            self.iface.messageBar().pushMessage(
+                    self.trUtf8("Qlr Browser Error"),
+                    self.trUtf8("The selected path does not exist anymore"),
+                    level=QgsMessageBar.CRITICAL)
+            return False
 
     #
     # Events
