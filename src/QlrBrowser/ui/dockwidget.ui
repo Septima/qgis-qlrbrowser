@@ -70,6 +70,9 @@
     </item>
     <item>
      <widget class="QTreeWidget" name="treeWidget">
+      <property name="selectionMode">
+       <enum>QAbstractItemView::NoSelection</enum>
+      </property>
       <column>
        <property name="text">
         <string notr="true">1</string>
