@@ -103,6 +103,8 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_doubleclicked(self, item, column):
+        if item.fileitem.isdir:
+            return
         newState = Qt.Checked if item.checkState(column) == Qt.Unchecked else Qt.Unchecked
         item.setCheckState(column, newState)
 
@@ -196,10 +198,12 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
         self.setIcon(0, fileitem.icon)
         self.setToolTip(0, self.fullpath)
         self.setCheckState(0, Qt.Unchecked if not checked else Qt.Checked )
+
         if fileitem.isdir:
-            pass
+            self.setFlags(self.flags() &  ~Qt.ItemIsUserCheckable)
         else:
             self.setFlags(self.flags() | Qt.ItemIsUserCheckable)
+
         self.updateDisplay()
 
     def updateDisplay(self):
