@@ -30,4 +30,4 @@ class QlrBrowserSettings(SettingManager):
     def __init__(self):
         SettingManager.__init__(self, pluginName)
         # Set default baseDirectory to users "home" dir
-        self.addSetting("baseDirectory", "string", "global", os.path.expanduser("~"))
+        self.addSetting("baseDirectory", "string", "global", "")

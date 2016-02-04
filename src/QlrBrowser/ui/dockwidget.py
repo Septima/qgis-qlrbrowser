@@ -74,12 +74,16 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         #self.filterLineEdit.textChanged.connect(self._fillTree)
         self.filterLineEdit.textChanged.connect( self.timer.start)
 
+        # Default fill
+        self._fillTree()
+
     def addRootPath(self, path):
-        self.root_paths.add(path)
-        fs = FileSystemModel()
-        self.file_system[path] = fs
-        fs.updated.connect(self._fillTree)
-        fs.setRootPath(path)
+        if os.path.exists(path):
+            self.root_paths.add(path)
+            fs = FileSystemModel()
+            self.file_system[path] = fs
+            fs.updated.connect(self._fillTree)
+            fs.setRootPath(path)
 
     def removeRootPath(self, path):
         self.root_paths.remove(path)
@@ -146,6 +150,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
     def _fillTree(self):
         self.treeWidget.clear()
 
+        if len(self.root_paths) < 1:
+            self._noRootPathMessage()
+
         for basepath in self.root_paths:
             fileitem = self._filteredFileItems(basepath)
             if fileitem:
@@ -199,6 +206,13 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                     self.trUtf8("The selected path does not exist anymore"),
                     level=QgsMessageBar.CRITICAL)
             return False
+
+    def _noRootPathMessage(self):
+        baseTreeItem = QtGui.QTreeWidgetItem([self.trUtf8("No base directory configured...")])
+        font = baseTreeItem.font(0)
+        font.setItalic(True)
+        baseTreeItem.setFont(0, font)
+        self.treeWidget.addTopLevelItem(baseTreeItem)
 
     #
     # Events

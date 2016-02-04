@@ -34,14 +34,19 @@
         <translation>Filtrér</translation>
     </message>
     <message>
-        <location filename="dockwidget.py" line="197"/>
+        <location filename="dockwidget.py" line="204"/>
         <source>Qlr Browser Error</source>
         <translation>Qlr Browser fejl</translation>
     </message>
     <message>
-        <location filename="dockwidget.py" line="197"/>
+        <location filename="dockwidget.py" line="204"/>
         <source>The selected path does not exist anymore</source>
         <translation>Den valgte sti eksisterer ikke længere</translation>
+    </message>
+    <message>
+        <location filename="dockwidget.py" line="211"/>
+        <source>No base directory configured...</source>
+        <translation>Rodbibliotek er ikke konfigureret...</translation>
     </message>
 </context>
 <context>
