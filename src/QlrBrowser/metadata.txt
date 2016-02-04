@@ -14,7 +14,10 @@ version=0.2.0
 author=Asger Skovbo Petersen, Septima
 email=asger@septima.dk
 
-about=This plugin enables a layer menu in a nested tree structure based on .qlr files. The layer tree is nested according to the location in folder/subfolder of the .qlr files.
+about=
+    This plugin enables a layer menu in a nested tree structure based on .qlr files.
+    The layer tree is nested according to the location in folder/subfolder of the .qlr files.
+    Development of this plugin has been funded by Haderslev Kommune and Frederikssund Kommune.
 
 tracker=https://github.com/Septima/qgis-qlrbrowser/issues
 repository=https://github.com/Septima/qgis-qlrbrowser
@@ -24,6 +27,7 @@ repository=https://github.com/Septima/qgis-qlrbrowser
 
 # Uncomment the following line and add your changelog:
 changelog=
+    2016-02-03 0.2.1 Fix QGIS hanging when installing on machine with huge home dir
     2016-02-03 0.2.0 Bugfixes and better packaging
     2015-12-12 0.1.0 Initial version
 
