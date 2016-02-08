@@ -25,7 +25,7 @@ import os
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer
 from qgis._gui import QgsMessageBar
-from ..core.filesystemmodel import FileSystemModel
+from ..core.filesystemmodel import FileSystemModel, FileSystemRecursionException, MAXFILESYSTEMOBJECTS
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'dockwidget.ui'))
@@ -83,7 +83,10 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             fs = FileSystemModel()
             self.file_system[path] = fs
             fs.updated.connect(self._fillTree)
-            fs.setRootPath(path)
+            try:
+                fs.setRootPath(path)
+            except FileSystemRecursionException as e:
+                self._setRootPathMessage(self.trUtf8("Configured base path has too many files (> {})".format(MAXFILESYSTEMOBJECTS)))
 
     def removeRootPath(self, path):
         self.root_paths.remove(path)
@@ -107,7 +110,11 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     def reloadFileSystemInfo(self):
         for fs in self.file_system.values():
-            fs.update()
+            try:
+                fs.update()
+            except FileSystemRecursionException as e:
+                self._setRootPathMessage(self.trUtf8("Configured base path has too many files (> {})".format(MAXFILESYSTEMOBJECTS)))
+
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_doubleclicked(self, item, column):
@@ -148,10 +155,10 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             item = iterator.value()
 
     def _fillTree(self):
-        self.treeWidget.clear()
-
         if len(self.root_paths) < 1:
-            self._noRootPathMessage()
+            self._setRootPathMessage(self.trUtf8("No base directory configured..."))
+
+        self.treeWidget.clear()
 
         for basepath in self.root_paths:
             fileitem = self._filteredFileItems(basepath)
@@ -207,8 +214,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                     level=QgsMessageBar.CRITICAL)
             return False
 
-    def _noRootPathMessage(self):
-        baseTreeItem = QtGui.QTreeWidgetItem([self.trUtf8("No base directory configured...")])
+    def _setRootPathMessage(self, message):
+        self.treeWidget.clear()
+        baseTreeItem = QtGui.QTreeWidgetItem([message])
         font = baseTreeItem.font(0)
         font.setItalic(True)
         baseTreeItem.setFont(0, font)
