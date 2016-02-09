@@ -4,8 +4,10 @@ from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice,
 from PyQt4.QtGui import QFileIconProvider
 from PyQt4.QtXml import QDomDocument
 
-class FileSystemModel(QObject):
+# Only read this many objects from the file system
+MAXFILESYSTEMOBJECTS = 1000
 
+class FileSystemModel(QObject):
     updated = pyqtSignal()
 
     def __init__(self):
@@ -19,7 +21,7 @@ class FileSystemModel(QObject):
         self.update()
 
     def update(self):
-        self.rootitem = FileSystemItem(self.rootpath, True)
+        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter())
         self.updated.emit()
 
 class FileSystemItem(QObject):
@@ -27,8 +29,14 @@ class FileSystemItem(QObject):
     fileExtensions = ['*.qlr']
     xmlSearchableTags = ['title', 'abstract','layername', 'attribution']
 
-    def __init__(self, file, recurse = True):
+    def __init__(self, file, recurse = True, recursion_counter = None):
         super(FileSystemItem, self).__init__()
+
+        # Raise exception if root path has too many child elements
+        if recursion_counter:
+            recursion_counter.count += 1
+            if recursion_counter.count >= MAXFILESYSTEMOBJECTS:
+                raise FileSystemRecursionException("File system is too big for this file system model")
 
         if isinstance(file, QFileInfo):
             self.fileinfo = file
@@ -43,7 +51,7 @@ class FileSystemItem(QObject):
         if self.isdir and recurse:
             qdir = QDir(self.fullpath)
             for finfo in qdir.entryInfoList( FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
-                self.children.append(FileSystemItem(finfo, recurse))
+                self.children.append(FileSystemItem(finfo, recurse, recursion_counter))
         else:
             # file
             # Populate this if and when needed
@@ -106,3 +114,14 @@ class FileSystemItem(QObject):
             return u' '.join(texts)
         finally:
             f.close()
+
+class FileSystemRecursionException():
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return repr(self.message)
+
+class FileSystemRecursionCounter():
+    def __init__(self):
+        self.count = 0
