@@ -55,14 +55,18 @@ class FileSystemItem(QObject):
         filterlower = filter.lower()
         namematch = filterlower in self.basename.lower() or filterlower in self.displayname.lower()
         if self.isdir:
-            diritem = FileSystemItem(self.fullpath, False)
-            for child in self.children:
-                childmatch = child.filtered(filter)
-                if childmatch is not None:
-                    diritem.children.append((childmatch))
-            # is dir a match?
-            if namematch or len(diritem.children) > 0:
-                return diritem
+            if namematch:
+                # Stop searching. Return this dir and all sub items
+                return FileSystemItem(self.fullpath, True)
+            else:
+                # Only return dir if at least one sub item is a filter match
+                diritem = FileSystemItem(self.fullpath, False)
+                for child in self.children:
+                    childmatch = child.filtered(filter)
+                    if childmatch is not None:
+                        diritem.children.append((childmatch))
+                if len(diritem.children) > 0:
+                    return diritem
         else:
             if self.searchablecontent is None:
                 self.searchablecontent = self.get_searchable_content().lower()
