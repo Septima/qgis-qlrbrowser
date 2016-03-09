@@ -65,7 +65,7 @@ class FileSystemItem(QObject):
         if self.isdir:
             if namematch:
                 # Stop searching. Return this dir and all sub items
-                return FileSystemItem(self.fullpath, True)
+                return FileSystemItem(self.fullpath, False)
             else:
                 # Only return dir if at least one sub item is a filter match
                 diritem = FileSystemItem(self.fullpath, False)

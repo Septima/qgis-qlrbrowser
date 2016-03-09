@@ -175,7 +175,10 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         item = iterator.value()
         while item:
             if item.fileitem.isdir:
-                item.setExpanded(True)
+                if item.fileitem.filtered(self.filterLineEdit.text().strip()):
+                    item.setExpanded(True)
+                else:
+                    item.setExpanded(False)
             iterator += 1
             item = iterator.value()
 
