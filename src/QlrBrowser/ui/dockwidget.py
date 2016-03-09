@@ -250,6 +250,10 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
 
     def updateDisplay(self):
         name = self.fileitem.displayname
+        # labels containing dots get truncated, here a little workaround
+        if self.fileitem.isdir:
+            name = os.path.split(self.fileitem.fullpath)[-1]
+
         font = self.font(0)
         font.setBold(False)
         if self.fileitem.isdir:
