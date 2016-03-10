@@ -105,7 +105,13 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         return path in self.checked_paths
 
     def getNumCheckedSubPaths(self, path):
-        count = sum( (1 for x in self.checked_paths if x.startswith(path)) )
+        """
+        Returns the number of checked items in all subpaths of this element
+        :param path:
+        :return:
+        """
+        count = sum( (1 for x in self.checked_paths if self.is_child_directory(x, path)))
+
         return count
 
     def reloadFileSystemInfo(self):
@@ -228,6 +234,17 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
     def closeEvent(self, event):
         self.closingPlugin.emit()
         event.accept()
+
+    def is_child_directory(self, child_dir, parent_dir):
+        """
+        Returns true if child_dir is inside parent_dir.
+        :param child_dir
+        :param parent_dir
+        :return:
+        """
+        parent_dir = os.path.join(os.path.realpath(parent_dir), '')
+        child_dir = os.path.realpath(child_dir)
+        return os.path.commonprefix([child_dir, parent_dir]) == parent_dir
 
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
     def __init__(self, fileitem, checked = False, checked_sub_paths = 0):
