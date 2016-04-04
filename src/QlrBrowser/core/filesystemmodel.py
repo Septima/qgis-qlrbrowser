@@ -1,5 +1,6 @@
 __author__ = 'asger'
 
+import os
 from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
 from PyQt4.QtGui import QFileIconProvider
 from PyQt4.QtXml import QDomDocument
@@ -51,7 +52,7 @@ class FileSystemItem(QObject):
             self.fileinfo = QFileInfo(file)
         self.fullpath = self.fileinfo.absoluteFilePath()
         self.basename = self.fileinfo.completeBaseName()
-        self.displayname = self.fileinfo.completeBaseName()
+        self.displayname = os.path.split(self.fullpath)[-1]
         self.icon = FileSystemItem.iconProvider.icon(self.fileinfo)
         self.isdir = self.fileinfo.isDir()
         self.children = [] if self.isdir else None
