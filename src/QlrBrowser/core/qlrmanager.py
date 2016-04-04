@@ -29,9 +29,14 @@ import random
 import string
 
 class QlrManager():
+    """ The Manager for the Qlr widget.
+    """
     customPropertyName = "qlrbrowserid"
 
     def __init__(self, iface, qlrbrowser):
+        """
+        Instantiate the class and set the layerTreeRoot and connect some events.
+        """
         self.iface = iface
         self.browser = qlrbrowser
 
@@ -39,16 +44,19 @@ class QlrManager():
         self.modelIndexBeingAdded = None
         self.removingNode = False
 
-        # Get events whenever layers are added or deleted
+        # Connect some events whenever layers are added or deleted
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
         layerTreeRoot.addedChildren.connect(self.legend_layersadded)
         layerTreeRoot.removedChildren.connect(self.legend_layersremoved)
 
-        # Get events when user interacts with browser
+        # Connect an event when user interacts with browser
         self.browser.itemStateChanged.connect(self.browser_itemclicked)
 
     def syncCheckedItems(self):
-        # Loop through our list and update if layers have been removed
+        """
+        Loop through our list and update if layers have been removed
+        :return:
+        """
         for fileitem, nodes in self.fileSystemItemToLegendNode.items():
             # print "Checking node", nodehandle
             allRemoved = True
@@ -62,7 +70,9 @@ class QlrManager():
                 self.fileSystemItemToLegendNode.pop(fileitem, None)
 
     def legend_layersremoved(self, node, indexFrom, indexTo):
-        #print "REMOVED", node, indexFrom, indexTo
+        """
+        The event that is triggered when a layer is removed.
+        """
         # Ignore, if we removed this node
         if self.removingNode:
             #print "We removed this node our self"
@@ -70,7 +80,8 @@ class QlrManager():
         self.syncCheckedItems()
 
     def legend_layersadded(self, node, indexFrom, indexTo):
-        #print "WILL ADDXXXX", node, indexFrom, indexTo
+        """Triggered by a layer add event.
+        """
         # Are nodes being added by us?
         if self.modelIndexBeingAdded:
             # node is added by us. (Can potentially be many unnested layers)
@@ -95,7 +106,9 @@ class QlrManager():
 
     @pyqtSlot(object, int)
     def browser_itemclicked(self, fileinfo, newState):
-        # print "qlrmanager itemclicked", fileinfo
+        """
+        Triggered when an item in the browser is clicked.
+        """
         path = fileinfo.fullpath
         if newState == False:
             # Item was unchecked. Remove node(s)
@@ -140,7 +153,10 @@ class QlrManager():
         return root
 
     def _move_qlr_to_top(self, qlrpath):
-        """Moves the layers added to the TOC from the given QLR file. For now always to the top of the TOC"""
+        """
+        Moves the layers added to the TOC from the given QLR file. For now always to the top of the TOC
+        """
+
         if not qlrpath in self.fileSystemItemToLegendNode:
             return
         # Only supports moving layer to the top of the TOC.
@@ -161,9 +177,13 @@ class QlrManager():
     def _random_string(self):
         return ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
 
-    def _getgroupNodes(self, rootNode):
+    def _getgroupNodes(self, root_node):
+        """
+        Returns a group of layers fot a given rootNode.
+        :type rootNode: the root node
+        """
         groupnodes = []
-        for n in rootNode.children():
+        for n in root_node.children():
             #print "Checking node", n
             if isinstance(n, QgsLayerTreeGroup):
                 #print n, "is a group node"
@@ -173,6 +193,10 @@ class QlrManager():
         return groupnodes
 
     def _getlayerTreeNode(self, nodeinfo):
+        """
+        Returns a TreeNode given its nodeinfo.
+        :type nodeinfo: object
+        """
         root = QgsProject.instance().layerTreeRoot()
         if nodeinfo['type'] == 'layer':
             node = root.findLayer( nodeinfo['layerid'] )
@@ -191,9 +215,11 @@ class QlrManager():
             raise Exception("Wrong type")
 
     def unload(self):
+        """Unload the children of the TreeNode and disconnect its event.
+        """
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
         layerTreeRoot.addedChildren.disconnect(self.legend_layersadded)
         layerTreeRoot.removedChildren.disconnect(self.legend_layersremoved)
 
-        # Get events when user interacts with browser
+        # Disconnect the event handler of this element when user interacts with browser
         self.browser.itemStateChanged.disconnect(self.browser_itemclicked)

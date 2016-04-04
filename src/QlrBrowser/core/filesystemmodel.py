@@ -8,6 +8,10 @@ from PyQt4.QtXml import QDomDocument
 MAXFILESYSTEMOBJECTS = 1000
 
 class FileSystemModel(QObject):
+    """
+    A representation of the file system with <rootpath> as the root.
+    """
+
     updated = pyqtSignal()
 
     def __init__(self):
@@ -25,6 +29,9 @@ class FileSystemModel(QObject):
         self.updated.emit()
 
 class FileSystemItem(QObject):
+    """
+    An element in the FileSystemModel.
+    """
     iconProvider = QFileIconProvider()
     fileExtensions = ['*.qlr']
     xmlSearchableTags = ['title', 'abstract','layername', 'attribution']
@@ -58,6 +65,11 @@ class FileSystemItem(QObject):
             self.searchablecontent = None
 
     def filtered(self, filter):
+        """
+        Filters the root path.
+        :filter is a string. Is it contained in the basename or displayname then this item will be rendered.
+        :return: the directory item. If nothing is found returns None.
+        """
         if not filter:
             return self
         filterlower = filter.lower()
@@ -83,6 +95,9 @@ class FileSystemItem(QObject):
         return None
 
     def get_searchable_content(self):
+        """
+        Pulls out tags from the object and returns them in order to be used by the filtered() method.
+        """
         f = QFile(self.fileinfo.absoluteFilePath())
         f.open(QIODevice.ReadOnly)
         #stream = QTextStream(f)

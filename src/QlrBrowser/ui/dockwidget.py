@@ -32,6 +32,8 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class DockWidget(QtGui.QDockWidget, FORM_CLASS):
+    """The DockWidget class for the Qlr Panel.
+    """
     iconProvider = QtGui.QFileIconProvider()
 
     closingPlugin = pyqtSignal()
@@ -39,7 +41,10 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
     itemStateChanged = pyqtSignal(object, bool)
 
     def __init__(self, iface=None):
-        """Constructor."""
+        """
+        Constructor.
+        Sets the parent, sets up the UI and fills the tree.
+        """
         parent = None if iface is None else iface.mainWindow()
         super(DockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -78,6 +83,8 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         self._fillTree()
 
     def addRootPath(self, path):
+        """Adds the root path and sets up the File System Model and connects it to the _fillTree method.
+        """
         if os.path.exists(path):
             self.root_paths.add(path)
             fs = FileSystemModel()
@@ -89,11 +96,16 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                 self._setRootPathMessage(self.trUtf8("Configured base path has too many files (> {})".format(MAXFILESYSTEMOBJECTS)))
 
     def removeRootPath(self, path):
+        """
+        Removes the Root Path and disconnects the fillTree() method.
+        """
         self.root_paths.remove(path)
         fs = self.file_system.pop(path, None)
         fs.updated.disconnect(self._fillTree)
 
     def setPathCheckState(self, path, newState):
+        """Sets the check state of a path.
+        """
         oldState = path in self.checked_paths
         if newState:
             self.checked_paths.add(path)
@@ -102,19 +114,25 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         self._updateTree(path)
 
     def getIsPathChecked(self, path):
+        """
+        Returns true whth the path is checked.
+        :param path: string
+        """
         return path in self.checked_paths
 
     def getNumCheckedSubPaths(self, path):
         """
         Returns the number of checked items in all subpaths of this element
-        :param path:
-        :return:
+        :param path: string
+        :return: integer, number of checked paths
         """
         count = sum( (1 for x in self.checked_paths if self.is_child_directory(x, path)))
 
         return count
 
     def reloadFileSystemInfo(self):
+        """Updates the file system info for each element.
+        """
         for fs in self.file_system.values():
             try:
                 fs.update()
@@ -124,6 +142,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_doubleclicked(self, item, column):
+        """
+        Triggered on a doubleclick event of a Tree Widget.
+        """
         if item.fileitem.isdir:
             return
         newState = Qt.Checked if item.checkState(column) == Qt.Unchecked else Qt.Unchecked
@@ -131,6 +152,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_changed(self, item, column):
+        """
+        Triggered on a change event of a Tree Widget.
+        """
         checked = item.checkState(column) == Qt.Checked
         path = item.fullpath
         if checked:
@@ -143,8 +167,10 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.itemStateChanged.emit(item.fileitem, checked)
 
     def _updateTree(self, filter_path = None):
-        # Updates tree display
-        # Optionally only the branch which includes filter_path
+        """
+        Updates tree display
+        :filter_path , string, Optionally only the branch which includes filter_path
+        """
         iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
         item = iterator.value()
         while item:
@@ -161,6 +187,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             item = iterator.value()
 
     def _fillTree(self):
+        """
+        Fills the tree with items.
+        """
         if len(self.root_paths) < 1:
             self._setRootPathMessage(self.trUtf8("No base directory configured..."))
 
@@ -177,6 +206,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             self._expandTree()
 
     def _expandTree(self):
+        """
+        Expands the tree.
+        """
         iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
         item = iterator.value()
         while item:
@@ -186,6 +218,10 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             item = iterator.value()
 
     def _filteredFileItems(self, basepath):
+        """
+        Returns the filtered items of the basepath.
+        :basepath: string
+        """
         # For now just return unfiltered
         fs =  self.file_system[basepath]
         filterText = self.filterLineEdit.text().strip()
@@ -195,6 +231,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             return fs.rootitem
 
     def _fillTreeRecursively(self, baseWidgetItem, baseFileItem):
+        """
+        Fills a baseWidgetItem into the baseFileItem
+        """
         if not baseFileItem.isdir:
             return
         for child in baseFileItem.children:
@@ -204,6 +243,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             baseWidgetItem.addChild(childTreeItem)
 
     def _createWidgetItem(self, fileitem):
+        """
+        Creates a widget item from a file item.
+        """
         checked = self.getIsPathChecked(fileitem.fullpath)
         num_checked_sub_paths = 0
         if fileitem.isdir:
@@ -211,13 +253,18 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         return TreeWidgetItem(fileitem, checked, num_checked_sub_paths)
 
     def _checkFileItemExists(self, path):
+        """
+        Returns true if a path exists.
+        :path string
+        :returns boolean
+        """
         if os.path.exists(path):
             return True
         else:
             self.iface.messageBar().pushMessage(
-                    self.trUtf8("Qlr Browser Error"),
-                    self.trUtf8("The selected path does not exist anymore"),
-                    level=QgsMessageBar.CRITICAL)
+                self.trUtf8("Qlr Browser Error"),
+                self.trUtf8("The selected path does not exist anymore"),
+                level=QgsMessageBar.CRITICAL)
             return False
 
     def _setRootPathMessage(self, message):
@@ -240,16 +287,22 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         Returns true if child_dir is inside parent_dir.
         :param child_dir
         :param parent_dir
-        :return:
+        :return: boolean
         """
         parent_dir = os.path.join(os.path.realpath(parent_dir), '')
         child_dir = os.path.realpath(child_dir)
         return os.path.commonprefix([child_dir, parent_dir]) == parent_dir
 
+
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
-    def __init__(self, fileitem, checked = False, checked_sub_paths = 0):
+    """
+    An item in the Tree Widget.
+    """
+    def __init__(self, fileitem, checked = False, checked_sub_paths=0):
+        """
+        Constructor. Sets the properties for display
+        """
         super(TreeWidgetItem, self).__init__()
-        # Properties for display
         self.fileitem = fileitem
         self.fullpath = fileitem.fullpath
         self.displayname = None
@@ -266,6 +319,9 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
         self.updateDisplay()
 
     def updateDisplay(self):
+        """
+        Updates the display, sets the font, displayname.
+        """
         name = self.fileitem.displayname
         font = self.font(0)
         font.setBold(False)
@@ -278,6 +334,10 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
         self.setFont(0, font)
 
     def setSubChecked(self, num):
+        """
+        Sets a subitem to checked.
+        :num: The number of the item.
+        """
         self.subchecked = num
         self.updateDisplay()
 
