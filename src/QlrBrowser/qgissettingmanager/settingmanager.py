@@ -27,7 +27,7 @@
 #---------------------------------------------------------------------
 
 
-from types import *
+from types import Bool, Color, Double, Integer, Stringlist, String
 
 # to print debug info
 Debug = False
