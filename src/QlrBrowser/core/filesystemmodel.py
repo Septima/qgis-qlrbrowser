@@ -38,12 +38,11 @@ class FileSystemItem(QObject):
         super(FileSystemItem, self).__init__()
 
         self.config = QSettings()
-        self.readconfig()
 
         # Raise exception if root path has too many child elements
         if recursion_counter:
             recursion_counter.count += 1
-            if recursion_counter.count >= self.config.get('max_file_system_objects', 1000):
+            if recursion_counter.count >= self.config.value('QlrBrowser/max_file_system_objects', 1000, type=int):
                 raise FileSystemRecursionException("File system is too big for this file system model")
 
         if isinstance(file, QFileInfo):
@@ -58,7 +57,8 @@ class FileSystemItem(QObject):
         self.children = [] if self.isdir else None
         if self.isdir and recurse:
             qdir = QDir(self.fullpath)
-            for finfo in qdir.entryInfoList( FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
+            for finfo in qdir.entryInfoList(
+                    FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
                 self.children.append(FileSystemItem(finfo, recurse, recursion_counter))
         else:
             # file
@@ -130,12 +130,6 @@ class FileSystemItem(QObject):
             return u' '.join(texts)
         finally:
             f.close()
-
-    def readconfig(self):
-        s = QSettings()
-        self.config = {
-            'max_file_system_objects': s.value('QlrBrowser' + "/max_file_system_objects", 1000, type=int)
-        }
 
 class FileSystemRecursionException():
     def __init__(self, message):

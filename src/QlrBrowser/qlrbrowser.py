@@ -47,6 +47,14 @@ class QlrBrowser:
             application at run time.
         :type iface: QgsInterface
         """
+
+        self.config = {}
+
+        s = QSettings()
+        v = s.value("QlrBrowser/max_file_system_objects", 1000, type=int)
+        s.setValue("QlrBrowser/max_file_system_objects", v)
+        self.config['max_file_system_objects'] = s
+
         # Save reference to the QGIS interface
         self.iface = iface
 
