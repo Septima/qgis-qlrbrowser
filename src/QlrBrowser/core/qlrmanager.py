@@ -38,6 +38,11 @@ class QlrManager():
         Instantiate the class and set the layerTreeRoot and connect some events.
         """
 
+        s = QSettings()
+        self.config = {
+            'max_file_system_objects': s.value('QlrBrowserABCD' + "/max_file_system_objects", 1000, type=int)
+        }
+
         self.iface = iface
         self.browser = qlrbrowser
 
