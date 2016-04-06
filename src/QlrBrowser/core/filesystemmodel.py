@@ -74,7 +74,7 @@ class FileSystemItem(QObject):
         if not filter:
             return self
         filterlower = filter.lower()
-        namematch = filterlower in self.basename.lower() or filterlower in self.displayname.lower()
+        namematch = self.name_matches(filter)
         if self.isdir:
             if namematch:
                 # Stop searching. Return this dir and all sub items
@@ -91,9 +91,27 @@ class FileSystemItem(QObject):
         else:
             if self.searchablecontent is None:
                 self.searchablecontent = self.get_searchable_content().lower()
-            if namematch or filterlower in self.searchablecontent:
+            if namematch or self.content_matches(filter):
                 return FileSystemItem(self.fullpath, False)
         return None
+
+    def matches(self, searchterm):
+        """Returns true if this item mathces the searchterm"""
+        return self.name_matches(searchterm) or self.content_matches(searchterm)
+
+    def name_matches(self, searchterm):
+        """Returns true if the searchterm matches the name of this item"""
+        lowered = searchterm.lower()
+        return lowered in self.basename.lower() or lowered in self.displayname.lower()
+
+    def content_matches(self, searchterm):
+        """Returns True if the searchterm matches content of this item"""
+        if self.isdir:
+            return False
+        lowered = searchterm.lower()
+        if self.searchablecontent is None:
+                self.searchablecontent = self.get_searchable_content().lower()
+        return lowered in self.searchablecontent
 
     def get_searchable_content(self):
         """

@@ -226,8 +226,13 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
         item = iterator.value()
         while item:
-            if item.fileitem.isdir:
-                item.setExpanded(True)
+            if item.fileitem.matches(self.filterLineEdit.text().strip()):
+                tmpitem = item
+                while tmpitem:
+                    tmpitem.setExpanded(True)
+                    tmpitem = tmpitem.parent()
+            else:
+                item.setExpanded(False)
             iterator += 1
             item = iterator.value()
 
