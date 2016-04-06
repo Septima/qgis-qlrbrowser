@@ -27,7 +27,7 @@ import os
 from PyQt4 import QtGui, uic
 
 from ..core.qlrbrowser_settings import QlrBrowserSettings
-from ..qgissettingmanager import SettingDialog
+from ..qgissettingmanager import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qlrbrowser_settingsdialog_base.ui'))
