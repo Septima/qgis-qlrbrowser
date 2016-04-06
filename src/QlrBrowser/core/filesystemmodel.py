@@ -3,6 +3,7 @@ __author__ = 'asger'
 from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream, QSettings
 from PyQt4.QtGui import QFileIconProvider
 from PyQt4.QtXml import QDomDocument
+from ..core.qlrbrowser_settings import QlrBrowserSettings
 
 import os
 
@@ -34,6 +35,7 @@ class FileSystemItem(QObject):
     iconProvider = QFileIconProvider()
     fileExtensions = ['*.qlr']
     xmlSearchableTags = ['title', 'abstract','layername', 'attribution']
+    settings = QlrBrowserSettings()
 
 
     def __init__(self, file, recurse = True, recursion_counter = None):
@@ -53,7 +55,14 @@ class FileSystemItem(QObject):
             self.fileinfo = QFileInfo(file)
         self.fullpath = self.fileinfo.absoluteFilePath()
         self.basename = self.fileinfo.completeBaseName()
-        self.displayname = os.path.split(self.fullpath)[-1]
+
+        fn = os.path.split(self.fullpath)[-1]
+        if self.settings.value("sortDelimitChar") and self.settings.value("sortDelimitChar") in fn:
+            atoms = fn.split(self.settings.value("sortDelimitChar"))
+            self.displayname = self.settings.value("sortDelimitChar").join(atoms[1:])
+        else:
+            self.displayname = fn
+
         self.icon = FileSystemItem.iconProvider.icon(self.fileinfo)
         self.isdir = self.fileinfo.isDir()
         self.children = [] if self.isdir else None
