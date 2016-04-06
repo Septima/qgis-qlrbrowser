@@ -21,8 +21,8 @@
  ***************************************************************************/
 """
 __author__ = 'asger'
+
 from ..qgissettingmanager import *
-import os
 
 pluginName = "qlrbrowser"
 

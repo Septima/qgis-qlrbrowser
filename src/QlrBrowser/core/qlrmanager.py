@@ -28,6 +28,8 @@ from qgis.gui import QgsMessageBar
 import random
 import string
 
+from qgis.core import QgsMessageLog
+
 class QlrManager():
     """ The Manager for the Qlr widget.
     """
@@ -143,8 +145,21 @@ class QlrManager():
                     # Force show messageBar
                     QCoreApplication.processEvents()
                     # Load qlr
-                    QgsLayerDefinition.loadLayerDefinition(path, self.layer_insertion_point())
-                    # Lets see if we catched the loaded layer. If not - it could be because the qlrfile was moved
+
+                    group = QgsLayerTreeGroup()
+
+                    QgsLayerDefinition.loadLayerDefinition(path, group)
+                    layers = group.findLayers()
+
+                    # Insert them into the main project
+                    root = QgsProject.instance().layerTreeRoot()
+
+                    for layer in layers:
+                        root.addLayer(layer.layer())
+
+                    # QgsLayerDefinition.loadLayerDefinition(path, self.layer_insertion_point())
+
+                    # Lets see if we caught the loaded layer. If not - it could be because the qlrfile was moved
                     if path in self.fileSystemItemToLegendNode:
                         # This is backwards, but qlr is always loaded at the bottom of the TOC
                         self._move_qlr_to_top(path)

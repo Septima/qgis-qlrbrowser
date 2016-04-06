@@ -4,6 +4,8 @@ from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice,
 from PyQt4.QtGui import QFileIconProvider
 from PyQt4.QtXml import QDomDocument
 
+import os
+
 class FileSystemModel(QObject):
     """
     A representation of the file system with <rootpath> as the root.
