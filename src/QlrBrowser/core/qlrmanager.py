@@ -22,7 +22,7 @@
 """
 __author__ = 'asger'
 
-from PyQt4.QtCore import pyqtSlot, QCoreApplication
+from PyQt4.QtCore import pyqtSlot, QCoreApplication, QSettings
 from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer
 from qgis.gui import QgsMessageBar
 import random
@@ -37,6 +37,7 @@ class QlrManager():
         """
         Instantiate the class and set the layerTreeRoot and connect some events.
         """
+
         self.iface = iface
         self.browser = qlrbrowser
 

@@ -1,12 +1,8 @@
 __author__ = 'asger'
 
-import os
-from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
+from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream, QSettings
 from PyQt4.QtGui import QFileIconProvider
 from PyQt4.QtXml import QDomDocument
-
-# Only read this many objects from the file system
-MAXFILESYSTEMOBJECTS = 1000
 
 class FileSystemModel(QObject):
     """
@@ -37,13 +33,17 @@ class FileSystemItem(QObject):
     fileExtensions = ['*.qlr']
     xmlSearchableTags = ['title', 'abstract','layername', 'attribution']
 
+
     def __init__(self, file, recurse = True, recursion_counter = None):
         super(FileSystemItem, self).__init__()
+
+        self.config = QSettings()
+        self.readconfig()
 
         # Raise exception if root path has too many child elements
         if recursion_counter:
             recursion_counter.count += 1
-            if recursion_counter.count >= MAXFILESYSTEMOBJECTS:
+            if recursion_counter.count >= self.config.get('max_file_system_objects', 1000):
                 raise FileSystemRecursionException("File system is too big for this file system model")
 
         if isinstance(file, QFileInfo):
@@ -130,6 +130,12 @@ class FileSystemItem(QObject):
             return u' '.join(texts)
         finally:
             f.close()
+
+    def readconfig(self):
+        s = QSettings()
+        self.config = {
+            'max_file_system_objects': s.value('QlrBrowser' + "/max_file_system_objects", 1000, type=int)
+        }
 
 class FileSystemRecursionException():
     def __init__(self, message):
