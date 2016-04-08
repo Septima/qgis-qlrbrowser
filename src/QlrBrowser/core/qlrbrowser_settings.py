@@ -21,10 +21,10 @@
  ***************************************************************************/
 """
 __author__ = 'asger'
-from ..qgissettingmanager import *
-import os
 
-pluginName = "qlrbrowser"
+from ..qgissettingmanager import SettingManager
+
+pluginName = "QlrBrowser"
 
 class QlrBrowserSettings(SettingManager):
     def __init__(self):
