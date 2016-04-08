@@ -51,7 +51,7 @@ class FileSystemItem(QObject):
             self.fileinfo = QFileInfo(file)
         self.fullpath = self.fileinfo.absoluteFilePath()
         self.basename = self.fileinfo.completeBaseName()
-        self.displayname = os.path.split(self.fullpath)[-1]
+        self.displayname = self.fileinfo.fileName() if self.fileinfo.isDir() else self.fileinfo.completeBaseName()
         self.icon = FileSystemItem.iconProvider.icon(self.fileinfo)
         self.isdir = self.fileinfo.isDir()
         self.children = [] if self.isdir else None
