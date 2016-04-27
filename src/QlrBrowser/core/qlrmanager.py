@@ -130,50 +130,26 @@ class QlrManager():
             if fileinfo.isdir:
                 pass
             else:
-                try:
-                    # This is used by our self to signal (to ourselves) that we are in the process of adding a layer now
-                    self.modelIndexBeingAdded = path
-                    msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileinfo.displayname)
-                    msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
-                    # Force show messageBar
-                    QCoreApplication.processEvents()
-                    # Load qlr
-                    QgsLayerDefinition.loadLayerDefinition(path, self.layer_insertion_point())
-                    # Lets see if we catched the loaded layer. If not - it could be because the qlrfile was moved
-                    if path in self.fileSystemItemToLegendNode:
-                        # This is backwards, but qlr is always loaded at the bottom of the TOC
-                        self._move_qlr_to_top(path)
-                    # Remove message
-                    self.iface.messageBar().popWidget(msgItem)
-                finally:
-                    self.modelIndexBeingAdded = None
+                msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileinfo.displayname)
+                msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
+                # Force show messageBar
+                QCoreApplication.processEvents()
+                # Load file
+                self.load_qlr_file(path)
+                # Remove message
+                self.iface.messageBar().popWidget(msgItem)
 
-    def layer_insertion_point(self):
-        # At the moment just return root
-        root = QgsProject.instance().layerTreeRoot()
-        return root
-
-    def _move_qlr_to_top(self, qlrpath):
-        """
-        Moves the layers added to the TOC from the given QLR file. For now always to the top of the TOC
-        """
-
-        if not qlrpath in self.fileSystemItemToLegendNode:
-            return
-        # Only supports moving layer to the top of the TOC.
-        for nodeinfo in self.fileSystemItemToLegendNode[qlrpath]:
-            node = self._getlayerTreeNode(nodeinfo)
-            self._move_toc_layer(node)
-
-    def _move_toc_layer(self, node):
-        # See http://gis.stackexchange.com/questions/134284/how-to-move-layers-in-the-qgis-table-of-contents-via-pyqgis
-        # Clone and insert at right place
-        myClone = node.clone()
-        treeRoot = QgsProject.instance().layerTreeRoot()
-        treeRoot.insertChildNode(0, myClone)
-        # Delete old
-        parent = node.parent()
-        parent.removeChildNode(node)
+    def load_qlr_file(self, path):
+        # Load qlr into a group owned by us
+        group = QgsLayerTreeGroup()
+        QgsLayerDefinition.loadLayerDefinition(path, group)
+        # Get a list of nodes
+        nodes = group.children()
+        # Remove from parent node
+        for n in nodes:
+            group.takeChild(n)
+        # Insert them into the main project
+        QgsProject.instance().layerTreeRoot().insertChildNodes(0, nodes)
 
     def _random_string(self):
         return ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
