@@ -13,11 +13,13 @@ class FileSystemModel(QObject):
 
     updated = pyqtSignal()
 
+
     def __init__(self):
         super(FileSystemModel, self).__init__()
         self.rootpath = None
         self.rootitem = None
-        self.namingregex = re.compile('^(?:[0-9]{1,3}\~)?(.*)$')
+        self.settings = QlrBrowserSettings()
+        self.validSortDelimitChars = ['~','!','#','$','%','&','+','-',';','=','@','^','_']
 
     def setRootPath(self, path):
         self.rootpath = path.rstrip('/\\')
@@ -25,8 +27,20 @@ class FileSystemModel(QObject):
         self.update()
 
     def update(self):
-        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(), namingregex=self.namingregex)
+        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(), namingregex=self.namingregex())
         self.updated.emit()
+
+    def namingregex(self):
+        if not self.settings.value("useSortDelimitChar"):
+            return None
+        else:
+            char = self.settings.value("sortDelimitChar")
+            if char not in self.validSortDelimitChars:
+                raise Exception("sortDelimitChar is not valid: '" + char + "'. Should be one of: " + ",".join(self.validSortDelimitChars))
+            # Like ^(?:[0-9]{1,3}\~)?(.*)$ for char='~'
+            strRex = '^(?:[0-9]{1,3}\\' + char + ')?(.*)$'
+            return re.compile(strRex)
+
 
 class FileSystemItem(QObject):
     """

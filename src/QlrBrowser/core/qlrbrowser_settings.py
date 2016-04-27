@@ -32,3 +32,5 @@ class QlrBrowserSettings(SettingManager):
         # Set default baseDirectory to users "home" dir
         self.addSetting("baseDirectory", "string", "global", "")
         self.addSetting("maxFileSystemObjects", "integer", "global", 1000)
+        self.addSetting("sortDelimitChar", "string", "global", "~")
+        self.addSetting("useSortDelimitChar", "bool", "global", True)
