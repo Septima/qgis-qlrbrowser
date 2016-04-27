@@ -42,12 +42,10 @@ class QlrManager():
         self.browser = qlrbrowser
 
         self.fileSystemItemToLegendNode = dict()
-        self.modelIndexBeingAdded = None
         self.removingNode = False
 
         # Connect some events whenever layers are added or deleted
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
-        layerTreeRoot.addedChildren.connect(self.legend_layersadded)
         layerTreeRoot.removedChildren.connect(self.legend_layersremoved)
 
         # Connect an event when user interacts with browser
@@ -79,31 +77,6 @@ class QlrManager():
             #print "We removed this node our self"
             return
         self.syncCheckedItems()
-
-    def legend_layersadded(self, node, indexFrom, indexTo):
-        """Triggered by a layer add event.
-        """
-        # Are nodes being added by us?
-        if self.modelIndexBeingAdded:
-            # node is added by us. (Can potentially be many unnested layers)
-            nodes = []
-            for index in range(indexFrom, indexTo + 1):
-                internalid = self._random_string()
-                nodeinfo = {'internalid': internalid}
-                addedNode = node.children()[index]
-                addedNode.setCustomProperty(QlrManager.customPropertyName, internalid)
-                if isinstance(addedNode, QgsLayerTreeGroup):
-                    nodeinfo['type'] = 'group'
-                    nodeinfo['name'] = addedNode.name()
-                elif isinstance(addedNode, QgsLayerTreeLayer):
-                    nodeinfo['type'] = 'layer'
-                    nodeinfo['name'] = addedNode.layerName()
-                    nodeinfo['layerid'] = addedNode.layerId()
-                nodes.append(nodeinfo)
-            #print "Adding layer", mapping
-            self.fileSystemItemToLegendNode[self.modelIndexBeingAdded] = nodes
-            self.modelIndexBeingAdded = None
-        # print self.fileSystemItemToLegendNode
 
     @pyqtSlot(object, int)
     def browser_itemclicked(self, fileinfo, newState):
@@ -141,15 +114,36 @@ class QlrManager():
 
     def load_qlr_file(self, path):
         # Load qlr into a group owned by us
-        group = QgsLayerTreeGroup()
-        QgsLayerDefinition.loadLayerDefinition(path, group)
-        # Get a list of nodes
-        nodes = group.children()
-        # Remove from parent node
-        for n in nodes:
-            group.takeChild(n)
-        # Insert them into the main project
-        QgsProject.instance().layerTreeRoot().insertChildNodes(0, nodes)
+        try:
+            group = QgsLayerTreeGroup()
+            QgsLayerDefinition.loadLayerDefinition(path, group)
+
+            # Get subtree of nodes
+            nodes = group.children()
+            # plain list of nodes
+            nodeslist = []
+            for addedNode in nodes:
+                internalid = self._random_string()
+                nodeinfo = {'internalid': internalid}
+                addedNode.setCustomProperty(QlrManager.customPropertyName, internalid)
+                if isinstance(addedNode, QgsLayerTreeGroup):
+                    nodeinfo['type'] = 'group'
+                    nodeinfo['name'] = addedNode.name()
+                elif isinstance(addedNode, QgsLayerTreeLayer):
+                    nodeinfo['type'] = 'layer'
+                    nodeinfo['name'] = addedNode.layerName()
+                    nodeinfo['layerid'] = addedNode.layerId()
+                nodeslist.append(nodeinfo)
+                # Remove from parent node. Otherwise we cant add it to a new parent
+                group.takeChild(addedNode)
+            self.fileSystemItemToLegendNode[path] = nodeslist
+
+            # Insert them into the main project
+            QgsProject.instance().layerTreeRoot().insertChildNodes(0, nodes)
+            return True
+        except:
+            # For now just return silently
+            return False
 
     def _random_string(self):
         return ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
@@ -195,7 +189,6 @@ class QlrManager():
         """Unload the children of the TreeNode and disconnect its event.
         """
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
-        layerTreeRoot.addedChildren.disconnect(self.legend_layersadded)
         layerTreeRoot.removedChildren.disconnect(self.legend_layersremoved)
 
         # Disconnect the event handler of this element when user interacts with browser
