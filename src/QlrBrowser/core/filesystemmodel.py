@@ -4,6 +4,7 @@ from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice,
 from PyQt4.QtGui import QFileIconProvider
 from PyQt4.QtXml import QDomDocument
 from qlrbrowser_settings import QlrBrowserSettings
+import re
 
 class FileSystemModel(QObject):
     """
@@ -16,6 +17,7 @@ class FileSystemModel(QObject):
         super(FileSystemModel, self).__init__()
         self.rootpath = None
         self.rootitem = None
+        self.namingregex = re.compile('^(?:[0-9]{1,3}\~)?(.*)$')
 
     def setRootPath(self, path):
         self.rootpath = path.rstrip('/\\')
@@ -23,7 +25,7 @@ class FileSystemModel(QObject):
         self.update()
 
     def update(self):
-        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter())
+        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(), namingregex=self.namingregex)
         self.updated.emit()
 
 class FileSystemItem(QObject):
@@ -35,7 +37,7 @@ class FileSystemItem(QObject):
     xmlSearchableTags = ['title', 'abstract','layername', 'attribution']
 
 
-    def __init__(self, file, recurse = True, recursion_counter = None):
+    def __init__(self, file, recurse = True, recursion_counter = None, namingregex = None):
         super(FileSystemItem, self).__init__()
 
         # Raise exception if root path has too many child elements
@@ -49,6 +51,8 @@ class FileSystemItem(QObject):
         self.fullpath = self.fileinfo.absoluteFilePath()
         self.basename = self.fileinfo.completeBaseName()
         self.displayname = self.fileinfo.fileName() if self.fileinfo.isDir() else self.fileinfo.completeBaseName()
+        if namingregex:
+            self.displayname = namingregex.match(self.displayname).group(1)
         self.icon = FileSystemItem.iconProvider.icon(self.fileinfo)
         self.isdir = self.fileinfo.isDir()
         self.children = [] if self.isdir else None
@@ -56,7 +60,7 @@ class FileSystemItem(QObject):
             qdir = QDir(self.fullpath)
             for finfo in qdir.entryInfoList(
                     FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
-                self.children.append(FileSystemItem(finfo, recurse, recursion_counter))
+                self.children.append(FileSystemItem(finfo, recurse, recursion_counter, namingregex))
         else:
             # file
             # Populate this if and when needed
