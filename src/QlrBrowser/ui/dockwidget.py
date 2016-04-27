@@ -206,6 +206,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         """
         if len(self.root_paths) < 1:
             self._setRootPathMessage(self.trUtf8("No base directory configured..."))
+            return
 
         self.treeWidget.clear()
 
