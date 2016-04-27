@@ -31,3 +31,4 @@ class QlrBrowserSettings(SettingManager):
         SettingManager.__init__(self, pluginName)
         # Set default baseDirectory to users "home" dir
         self.addSetting("baseDirectory", "string", "global", "")
+        self.addSetting("maxFileSystemObjects", "integer", "global", 1000)

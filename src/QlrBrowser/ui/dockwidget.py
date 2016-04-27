@@ -23,7 +23,7 @@
 
 import os
 from PyQt4 import QtGui, uic
-from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer, QSettings
+from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer
 from qgis._gui import QgsMessageBar
 from ..core.filesystemmodel import FileSystemModel, FileSystemRecursionException
 
@@ -52,9 +52,6 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         # self.<objectname>, and you can use autoconnect slots - see
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
-
-        self.config = QSettings()
-        self.readconfig()
 
         self.setupUi(self)
 
@@ -98,10 +95,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                 fs.setRootPath(path)
             except FileSystemRecursionException as e:
                 self._setRootPathMessage(
-                    self.trUtf8(
-                        "Configured base path has too many files (> {})".format(
-                            self.config.get('max_file_system_objects', 1000))
-                    )
+                    self.trUtf8("Configured base path has too many files (> {})".format(e.maxcount))
                 )
 
     def removeRootPath(self, path):
@@ -312,12 +306,6 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         parent_dir = os.path.join(os.path.realpath(parent_dir), '')
         child_dir = os.path.realpath(child_dir)
         return os.path.commonprefix([child_dir, parent_dir]) == parent_dir
-
-    def readconfig(self):
-        s = QSettings()
-        self.config = {
-            'max_file_system_objects': s.value('QlrBrowser' + "/max_file_system_objects", 1000, type=int)
-        }
 
 
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
