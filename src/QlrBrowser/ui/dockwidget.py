@@ -40,6 +40,8 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     itemStateChanged = pyqtSignal(object, bool)
 
+    refreshButtonClicked = pyqtSignal()
+
     def __init__(self, iface=None):
         """
         Constructor.
@@ -70,7 +72,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         # Signals
         self.treeWidget.itemDoubleClicked.connect(self._treeitem_doubleclicked)
         self.treeWidget.itemChanged.connect(self._treeitem_changed)
-        self.refreshButton.clicked.connect(self.reloadFileSystemInfo)
+        self.refreshButton.clicked.connect(self.refreshClicked)
 
         # Search
         self.timer = QTimer(self)
@@ -146,7 +148,9 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                         self.config.get('max_file_system_objects', 1000))
                     )
                 )
-
+    def refreshClicked(self):
+        self.reloadFileSystemInfo()
+        self.refreshButtonClicked.emit()
 
     @pyqtSlot(QtGui.QTreeWidgetItem, int)
     def _treeitem_doubleclicked(self, item, column):

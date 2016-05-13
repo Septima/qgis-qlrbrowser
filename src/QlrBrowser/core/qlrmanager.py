@@ -52,6 +52,9 @@ class QlrManager():
         # Connect an event when user interacts with browser
         self.browser.itemStateChanged.connect(self.browser_itemclicked)
 
+        # Connect an event when the user clicks "refresh" button
+        self.browser.refreshButtonClicked.connect(self.syncCheckedItems)
+
     def syncCheckedItems(self):
         """
         Loop through our list and update if layers have been removed
@@ -209,3 +212,5 @@ class QlrManager():
 
         # Disconnect the event handler of this element when user interacts with browser
         self.browser.itemStateChanged.disconnect(self.browser_itemclicked)
+
+        self.browser.refreshButtonClicked.disconnect(self.syncCheckedItems)
