@@ -81,9 +81,6 @@ class QlrBrowser:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Qlr Browser')
-        # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'QlrBrowser')
-        self.toolbar.setObjectName(u'QlrBrowser')
 
         # print "** INITIALIZING QlrBrowser"
 
@@ -167,9 +164,6 @@ class QlrBrowser:
         if whats_this is not None:
             action.setWhatsThis(whats_this)
 
-        if add_to_toolbar:
-            self.toolbar.addAction(action)
-
         if add_to_menu:
             self.iface.addPluginToMenu(
                 self.menu,
@@ -250,5 +244,3 @@ class QlrBrowser:
                 self.tr(u'&Qlr Browser'),
                 action)
             self.iface.removeToolBarIcon(action)
-        # remove the toolbar
-        del self.toolbar
