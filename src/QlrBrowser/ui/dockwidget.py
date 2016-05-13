@@ -96,9 +96,8 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             try:
                 fs.setRootPath(path)
             except FileSystemRecursionException as e:
-                self._setRootPathMessage(
-                    self.trUtf8("Configured base path has too many files (> {})".format(e.maxcount))
-                )
+                message = self.trUtf8("Configured base path has too many files (> {})").format(e.maxcount)
+                self._setRootPathMessage(message)
 
     def removeRootPath(self, path):
         """
