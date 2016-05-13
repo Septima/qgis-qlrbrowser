@@ -22,7 +22,8 @@
 """
 __author__ = 'asger'
 
-from PyQt4.QtCore import pyqtSlot, QCoreApplication
+from PyQt4.QtCore import pyqtSlot, QCoreApplication, QFile, QIODevice
+from PyQt4.QtXml import QDomDocument
 from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer
 from qgis.gui import QgsMessageBar
 import random
@@ -116,7 +117,22 @@ class QlrManager():
         # Load qlr into a group owned by us
         try:
             group = QgsLayerTreeGroup()
-            QgsLayerDefinition.loadLayerDefinition(path, group)
+
+            # On Windows this locks the parent dirs indefinitely
+            # See http://hub.qgis.org/issues/14811
+            # QgsLayerDefinition.loadLayerDefinition(path, group)
+
+            # Instead handle file ourselves
+            f = QFile(path)
+            if not f.open(QIODevice.ReadOnly):
+                return False
+            try:
+                doc = QDomDocument()
+                if not doc.setContent( f.readAll() ):
+                    return False
+                QgsLayerDefinition.loadLayerDefinition(doc, group)
+            finally:
+                f.close()
 
             # Get subtree of nodes
             nodes = group.children()
