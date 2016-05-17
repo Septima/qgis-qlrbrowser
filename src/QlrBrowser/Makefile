@@ -69,6 +69,8 @@ RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g'
 
 QGISDIR=.qgis2
 
+GIT_TAG = $(shell git describe --tags)
+
 default: compile
 
 compile: $(COMPILED_RESOURCE_FILES)
@@ -151,11 +153,17 @@ package: compile
 	@echo "------------------------------------"
 	@echo "Exporting plugin to zip package.	"
 	@echo "------------------------------------"
-	rm -f $(PLUGINNAME).zip
-	#git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	rm -f ../$(PLUGINNAME).zip
+	# Check that we are on the specified tag
+ ifeq ($(GIT_TAG),$(VERSION))
 	# Our py-files are in src/
-	cd ../..; git archive -o $(PLUGINNAME).zip $(VERSION):src
+	# cd ../..; git archive -o $(PLUGINNAME).zip $(VERSION):src
+	cd ..; find . | egrep "\.(html|md|py|ui|qm|png|txt|qrc)$$" | zip -@ $(PLUGINNAME).zip
 	echo "Created package: $(PLUGINNAME).zip"
+ else
+	@echo "ERROR: Current tag is NOT \"$(VERSION)\" but \"$(GIT_TAG)\""
+ endif
+
 
 upload: zip
 	@echo
