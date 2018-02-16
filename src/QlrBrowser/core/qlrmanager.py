@@ -133,7 +133,12 @@ class QlrManager():
                 doc = QDomDocument()
                 if not doc.setContent( f.readAll() ):
                     return False
-                QgsLayerDefinition.loadLayerDefinition(doc, group)
+
+                try:
+                    QgsLayerDefinition.loadLayerDefinition(doc, group)
+                except:
+                    QgsLayerDefinition.loadLayerDefinition(doc, group, "Failed to execute loadLayerDefinition in qlrmanager.py")
+
             finally:
                 f.close()
 
