@@ -22,38 +22,23 @@
 """
 import os.path
 
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from PyQt4.QtGui import QAction, QIcon
+from qgis.PyQt.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
+from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtGui import QIcon
 
 # Import manager
 from .core.qlrmanager import QlrManager
 
 # Import the code for ui
 from .ui.dockwidget import DockWidget
-from .ui.qlrbrowser_settingsdialog import QlrBrowserSettingsDialog
-from .core.qlrbrowser_settings import QlrBrowserSettings
+from .mysettings import *
 
 # Import resources. Needed even when it is not referenced anywhere
-import resources
 
 class QlrBrowser:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
-        """Constructor.
-
-        :param iface: An interface instance that will be passed to this class
-            which provides the hook by which you can manipulate the QGIS
-            application at run time.
-        :type iface: QgsInterface
-        """
-
-        self.config = {}
-
-        s = QSettings()
-        v = s.value("QlrBrowser/max_file_system_objects", 1000, type=int)
-        s.setValue("QlrBrowser/max_file_system_objects", v)
-        self.config['max_file_system_objects'] = s
 
         # Save reference to the QGIS interface
         self.iface = iface
@@ -76,7 +61,10 @@ class QlrBrowser:
                 QCoreApplication.installTranslator(self.translator)
 
         # settings
-        self.settings = QlrBrowserSettings()
+        self.settings = Settings()
+        self.options_factory = OptionsFactory(self.settings)
+        self.options_factory.setTitle(self.tr('QlrBrowser'))
+        iface.registerOptionsWidgetFactory(self.options_factory)
 
         # Declare instance attributes
         self.actions = []
@@ -175,22 +163,13 @@ class QlrBrowser:
 
 
     def initGui(self):
-        """Create the menu entries and toolbar icons inside the QGIS GUI."""
-
-        icon_path = ':/plugins/QlrBrowser/icon.png'
-        self.add_action(
-            icon_path,
-            text=self.tr(u'Settings'),
-            callback=self.showSettings,
-            parent=self.iface.mainWindow(),
-            add_to_toolbar=False)
 
         # dockwidget may not exist if:
         #    first run of plugin
         #    removed on close (see self.onClosePlugin method)
         if self.dockwidget is None:
             # Create the dockwidget (after translation) and keep reference
-            self.dockwidget = DockWidget( self.iface)
+            self.dockwidget = DockWidget( self.settings, self.iface )
             self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
             self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
@@ -202,20 +181,12 @@ class QlrBrowser:
         self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
         self.dockwidget.show()
 
-    def showSettings(self):
-        # create and show the dialog
-        dlg = QlrBrowserSettingsDialog(self.iface.mainWindow())
-        # show the dialog
-        dlg.show()
-        result = dlg.exec_()
-        # See if OK was pressed
-        if result == 1:
-            # For now only one root path is supported by settingsdialog
-            for p in list(self.dockwidget.root_paths):
-                self.dockwidget.removeRootPath(p)
-            self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
-            self.qlrmanager.unload()
-            self.qlrmanager = QlrManager(self.iface, self.dockwidget)
+    def settingsUpdated(self):
+        for p in list(self.dockwidget.root_paths):
+            self.dockwidget.removeRootPath(p)
+        self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
+        self.qlrmanager.unload()
+        self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
     # --------------------------------------------------------------------------
 
@@ -238,9 +209,3 @@ class QlrBrowser:
 
         # print "** UNLOAD QlrBrowser"
         self.iface.removeDockWidget(self.dockwidget)
-
-        for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Qlr Browser'),
-                action)
-            self.iface.removeToolBarIcon(action)

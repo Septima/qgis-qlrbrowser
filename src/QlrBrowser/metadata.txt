@@ -8,9 +8,10 @@
 
 [general]
 name=Qlr Browser
-qgisMinimumVersion=2.0
+qgisMinimumVersion=3.00
+qgisMaximumVersion=3.99
 description=This plugin lets the user browse and open qlr files
-version=1.0.0
+version=2.0.0
 author=Asger Skovbo Petersen, Septima
 email=asger@septima.dk
 
@@ -27,6 +28,7 @@ repository=https://github.com/Septima/qgis-qlrbrowser
 
 # Uncomment the following line and add your changelog:
 changelog=
+    2018-06-18 2.0.0 Begin upgrade to 3.nightly
     2018-02-16 1.0.0 Fix loading QLR layers in QGIS 2.18.15
     2016-05-17 0.2.5 Fix packaging error
     2016-05-13 0.2.4 Hide numeric filename prefixes - allows custom sorting. Only unfold tree to filter result hit. Fix directory lock bug. Max file items as global setting. Fix display of directory names with period (.). Fix directory names starting with the same substring.

@@ -1,9 +1,9 @@
 __author__ = 'asger'
 
-from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
-from PyQt4.QtGui import QFileIconProvider
-from PyQt4.QtXml import QDomDocument
-from qlrbrowser_settings import QlrBrowserSettings
+from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
+from qgis.PyQt.QtWidgets import QFileIconProvider
+from qgis.PyQt.QtXml import QDomDocument
+from ..mysettings import Settings
 import re
 
 class FileSystemModel(QObject):
@@ -14,11 +14,11 @@ class FileSystemModel(QObject):
     updated = pyqtSignal()
 
 
-    def __init__(self):
+    def __init__(self, settings):
         super(FileSystemModel, self).__init__()
         self.rootpath = None
         self.rootitem = None
-        self.settings = QlrBrowserSettings()
+        self.settings = settings
         self.validSortDelimitChars = ['~','!','#','$','%','&','+','-',';','=','@','^','_']
 
     def setRootPath(self, path):
@@ -27,7 +27,7 @@ class FileSystemModel(QObject):
         self.update()
 
     def update(self):
-        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(), namingregex=self.namingregex())
+        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
         self.updated.emit()
 
     def namingregex(self):
@@ -173,9 +173,8 @@ class FileSystemRecursionException():
         return repr(self.message)
 
 class FileSystemRecursionCounter():
-    def __init__(self):
+    def __init__(self, settings):
         self.count = 0
-        settings = QlrBrowserSettings()
         self.maxcount = settings.value("maxFileSystemObjects")
 
     def increment(self):

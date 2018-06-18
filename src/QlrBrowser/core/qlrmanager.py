@@ -22,12 +22,13 @@
 """
 __author__ = 'asger'
 
-from PyQt4.QtCore import pyqtSlot, QCoreApplication, QFile, QIODevice
-from PyQt4.QtXml import QDomDocument
-from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer
+from qgis.PyQt.QtCore import pyqtSlot, QCoreApplication, QFile, QIODevice
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.core import QgsProject, QgsLayerDefinition, QgsLayerTreeGroup, QgsLayerTreeLayer, Qgis, QgsMessageLog, QgsReadWriteContext
 from qgis.gui import QgsMessageBar
 import random
 import string
+ 
 
 class QlrManager():
     """ The Manager for the Qlr widget.
@@ -55,11 +56,24 @@ class QlrManager():
         # Connect an event when the user clicks "refresh" button
         self.browser.refreshButtonClicked.connect(self.syncCheckedItems)
 
+    def tr(self, message):
+        return QCoreApplication.translate('QlrBrowser', message)
+
+    def log(self, message):
+        """ Write to QGIS log from bridge. """
+        QgsMessageLog.logMessage(
+            '{}'.format(message),
+            'QlrBrowser',
+             Qgis.Info
+        )
+
+
     def syncCheckedItems(self):
         """
         Loop through our list and update if layers have been removed
         :return:
         """
+        fileitems_to_remove = []
         for fileitem, nodes in self.fileSystemItemToLegendNode.items():
             # print "Checking node", nodehandle
             allRemoved = True
@@ -69,8 +83,13 @@ class QlrManager():
                     allRemoved = False
                     break
             if allRemoved:
-                self.browser.setPathCheckState(fileitem, False)
-                self.fileSystemItemToLegendNode.pop(fileitem, None)
+                fileitems_to_remove.append(fileitem)
+                #self.browser.setPathCheckState(fileitem, False)
+                #self.fileSystemItemToLegendNode.pop(fileitem, None)
+                
+        for fileitem_to_remove in fileitems_to_remove:
+            self.browser.setPathCheckState(fileitem_to_remove, False)
+            self.fileSystemItemToLegendNode.pop(fileitem_to_remove, None)
 
     def legend_layersremoved(self, node, indexFrom, indexTo):
         """
@@ -82,7 +101,6 @@ class QlrManager():
             return
         self.syncCheckedItems()
 
-    @pyqtSlot(object, int)
     def browser_itemclicked(self, fileinfo, newState):
         """
         Triggered when an item in the browser is clicked.
@@ -90,7 +108,8 @@ class QlrManager():
         path = fileinfo.fullpath
         if newState == False:
             # Item was unchecked. Remove node(s)
-            if self.fileSystemItemToLegendNode.has_key(path):
+            # if self.fileSystemItemToLegendNode.has_key(path):
+            if path in self.fileSystemItemToLegendNode:
                 nodes = self.fileSystemItemToLegendNode[path]
                 #print "Remove node", nodehandle
                 for nodeinfo in nodes:
@@ -107,19 +126,20 @@ class QlrManager():
             if fileinfo.isdir:
                 pass
             else:
-                msgWidget = self.iface.messageBar().createMessage(u"Indlæser", fileinfo.displayname)
-                msgItem = self.iface.messageBar().pushWidget(msgWidget, QgsMessageBar.INFO, duration=0)
+                message = self.tr(u"Indlæser")
+                self.iface.messageBar().pushMessage(self.tr('QlrBrowser'), message, level=Qgis.Info, duration=5)
+
                 # Force show messageBar
                 QCoreApplication.processEvents()
                 # Load file
                 self.load_qlr_file(path)
-                # Remove message
-                self.iface.messageBar().popWidget(msgItem)
 
     def load_qlr_file(self, path):
         # Load qlr into a group owned by us
         try:
-            group = QgsLayerTreeGroup()
+            group1 = QgsLayerTreeGroup()
+            group2 = QgsProject.instance().layerTreeRoot()
+            group = group1
 
             # On Windows this locks the parent dirs indefinitely
             # See http://hub.qgis.org/issues/14811
@@ -134,10 +154,7 @@ class QlrManager():
                 if not doc.setContent( f.readAll() ):
                     return False
 
-                try:
-                    QgsLayerDefinition.loadLayerDefinition(doc, group)
-                except:
-                    QgsLayerDefinition.loadLayerDefinition(doc, group, "Failed to execute loadLayerDefinition in qlrmanager.py")
+                rc, rs = QgsLayerDefinition.loadLayerDefinition(doc, QgsProject.instance(), group, QgsReadWriteContext())
 
             finally:
                 f.close()
@@ -155,7 +172,7 @@ class QlrManager():
                     nodeinfo['name'] = addedNode.name()
                 elif isinstance(addedNode, QgsLayerTreeLayer):
                     nodeinfo['type'] = 'layer'
-                    nodeinfo['name'] = addedNode.layerName()
+                    nodeinfo['name'] = addedNode.name()
                     nodeinfo['layerid'] = addedNode.layerId()
                 nodeslist.append(nodeinfo)
                 # Remove from parent node. Otherwise we cant add it to a new parent
@@ -165,12 +182,12 @@ class QlrManager():
             # Insert them into the main project
             QgsProject.instance().layerTreeRoot().insertChildNodes(0, nodes)
             return True
-        except:
-            # For now just return silently
+        except Exception as e:
+            self.log('Failed to load qlr at ' + path +': '+ str(e))
             return False
 
     def _random_string(self):
-        return ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+        return ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
 
     def _getgroupNodes(self, root_node):
         """
