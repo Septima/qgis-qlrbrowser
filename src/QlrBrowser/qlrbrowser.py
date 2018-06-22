@@ -62,6 +62,7 @@ class QlrBrowser:
 
         # settings
         self.settings = Settings()
+        self.settings.settings_updated.connect(self.settingsUpdated)
         self.options_factory = OptionsFactory(self.settings)
         self.options_factory.setTitle(self.tr('QlrBrowser'))
         iface.registerOptionsWidgetFactory(self.options_factory)

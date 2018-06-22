@@ -38,7 +38,7 @@ class ConfigDialog(WIDGET, BASE, SettingDialog):
         self.browseButton.clicked.connect(self.browse)
 
     def browse(self):
-        directory = QFileDialog.getExistingDirectory(self, self.tr(u"Base directory"))
+        directory = QFileDialog.getExistingDirectory(self, self.tr(u"Base directory"), self.baseDirectory.text())
         if directory:
             self.baseDirectory.setText(directory)
 

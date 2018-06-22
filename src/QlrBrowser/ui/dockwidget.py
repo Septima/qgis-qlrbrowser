@@ -25,6 +25,7 @@ import os
 from qgis.PyQt import uic, QtWidgets
 from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer
 from qgis._gui import QgsMessageBar
+from qgis.core import Qgis
 from ..core.filesystemmodel import FileSystemModel, FileSystemRecursionException
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -281,8 +282,9 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         else:
             self.iface.messageBar().pushMessage(
                 self.tr("Qlr Browser Error"),
-                self.tr("The selected path does not exist anymore"),
-                level=QgsMessageBar.CRITICAL)
+                self.tr("The selected path does not exist anymore. The Qlr Browser panel is being updated"),
+                level=Qgis.Info,
+                duration=5)
             return False
 
     def _setRootPathMessage(self, message):
