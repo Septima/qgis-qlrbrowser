@@ -1,80 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS><TS version="2.0">
 <context>
-    <name>@default</name>
+    <name>ConfigDialog</name>
     <message>
-        <location filename="test_translations.py" line="48"/>
-        <source>Good morning</source>
-        <translation type="unfinished"></translation>
+        <location filename="settings_dialog.py" line="41"/>
+        <source>Base directory</source>
+        <translation>Rodbibliotek</translation>
     </message>
 </context>
 <context>
     <name>Dialog</name>
     <message>
-        <location filename="qlrbrowser_settingsdialog_base.ui" line="20"/>
+        <location filename="settings_dialog.ui" line="20"/>
         <source>Qlr Browser settings</source>
         <translation>Qlr Browser indstillinger</translation>
     </message>
     <message>
-        <location filename="qlrbrowser_settingsdialog_base.ui" line="47"/>
+        <location filename="settings_dialog.ui" line="33"/>
         <source>Browse</source>
         <translation>Gennemse</translation>
     </message>
     <message>
-        <location filename="qlrbrowser_settingsdialog_base.ui" line="28"/>
-        <source>File names:</source>
-        <translation>Filnavne:</translation>
+        <location filename="settings_dialog.ui" line="48"/>
+        <source>Hide numeric prefixes in file names (formatted like: &apos;01~xxxx.qlr&apos; )</source>
+        <translation>Skjul numeriske præfiks (formateret: &apos;01~xxxx.qlr&apos; )</translation>
     </message>
     <message>
-        <location filename="qlrbrowser_settingsdialog_base.ui" line="35"/>
+        <location filename="settings_dialog.ui" line="58"/>
         <source>Base directory:</source>
         <translation>Rodbibliotek:</translation>
-    </message>
-    <message>
-        <location filename="qlrbrowser_settingsdialog_base.ui" line="62"/>
-        <source>Hide numeric prefixes (formatted like: &apos;01~xxxx.qlr&apos; )</source>
-        <translation>Skjul numeriske præfiks (formateret: &apos;01~xxxx.qlr&apos; )</translation>
     </message>
 </context>
 <context>
     <name>DockWidget</name>
     <message>
-        <location filename="dockwidget.py" line="63"/>
+        <location filename="dockwidget.py" line="65"/>
         <source>Filter</source>
         <translation>Filtrér</translation>
     </message>
     <message>
-        <location filename="dockwidget.py" line="281"/>
-        <source>Qlr Browser Error</source>
-        <translation>Qlr Browser fejl</translation>
+        <location filename="dockwidget.py" line="146"/>
+        <source>Configured1 base path has too many files (&gt; {})</source>
+        <translation>Det konfigurerede rodbibliotek har for mange filer (&gt; {})</translation>
     </message>
     <message>
-        <location filename="dockwidget.py" line="281"/>
-        <source>The selected path does not exist anymore</source>
-        <translation>Den valgte sti eksisterer ikke længere</translation>
-    </message>
-    <message>
-        <location filename="dockwidget.py" line="205"/>
+        <location filename="dockwidget.py" line="207"/>
         <source>No base directory configured...</source>
         <translation>Rodbibliotek er ikke konfigureret...</translation>
     </message>
     <message>
-        <location filename="dockwidget.py" line="144"/>
-        <source>Configured base path has too many files (&gt; {})</source>
-        <translation>Det konfigurerede rodbibliotek har for mange filer (&gt; {})</translation>
+        <location filename="dockwidget.py" line="283"/>
+        <source>Qlr Browser Error</source>
+        <translation>Qlr Browser Fejl</translation>
+    </message>
+    <message>
+        <location filename="dockwidget.py" line="283"/>
+        <source>The selected path does not exist anymore. The Qlr Browser panel is being updated</source>
+        <translation>Den valgte sti eksisterer ikke længere</translation>
     </message>
 </context>
 <context>
     <name>QlrBrowser</name>
     <message>
-        <location filename="qlrbrowser.py" line="243"/>
-        <source>&amp;Qlr Browser</source>
-        <translation>&amp;Qlr Browser</translation>
+        <location filename="qlrbrowser.py" line="67"/>
+        <source>QlrBrowser</source>
+        <translation>QlrBrowser</translation>
     </message>
     <message>
-        <location filename="qlrbrowser.py" line="181"/>
-        <source>Settings</source>
-        <translation>Indstillinger</translation>
+        <location filename="qlrbrowser.py" line="72"/>
+        <source>&amp;Qlr Browser</source>
+        <translation>&amp;Qlr Browser</translation>
     </message>
 </context>
 <context>
@@ -87,20 +82,25 @@
     <message>
         <location filename="dockwidget.ui" line="54"/>
         <source>Reload qlr files</source>
-        <translation>Genindlæs qlr-filer</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="dockwidget.ui" line="57"/>
         <source>Reload</source>
-        <translation>Genindlæs</translation>
+        <translation>Genindlæs qlr-filer</translation>
     </message>
 </context>
 <context>
-    <name>QlrBrowserSettingsDialog</name>
+    <name>QlrManager</name>
     <message>
-        <location filename="qlrbrowser_settingsdialog.py" line="45"/>
-        <source>Base directory</source>
-        <translation>Rodbibliotek</translation>
+        <location filename="qlrmanager.py" line="129"/>
+        <source>Adding qlr-file to the layer panel</source>
+        <translation>Tilføjer qlr-fil til lagpanelet</translation>
+    </message>
+    <message>
+        <location filename="qlrmanager.py" line="130"/>
+        <source>QlrBrowser</source>
+        <translation>QlrBrowser</translation>
     </message>
 </context>
 </TS>

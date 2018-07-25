@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+encoding//src/QlrBrowser/__init__.py=utf-8
+encoding//src/QlrBrowser/core/qlrmanager.py=utf-8
+encoding//src/QlrBrowser/mysettings/__init__.py=utf-8
+encoding//src/QlrBrowser/mysettings/settings.py=utf-8
+encoding//src/QlrBrowser/mysettings/settings_dialog.py=utf-8
+encoding//src/QlrBrowser/qlrbrowser.py=utf-8
+encoding//src/QlrBrowser/resources.py=utf-8
+encoding//src/QlrBrowser/ui/dockwidget.py=utf-8

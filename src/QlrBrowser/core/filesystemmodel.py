@@ -1,9 +1,9 @@
 __author__ = 'asger'
 
-from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
-from PyQt4.QtGui import QFileIconProvider
-from PyQt4.QtXml import QDomDocument
-from qlrbrowser_settings import QlrBrowserSettings
+from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
+from qgis.PyQt.QtWidgets import QFileIconProvider
+from qgis.PyQt.QtXml import QDomDocument
+from ..mysettings import Settings
 import re
 
 class FileSystemModel(QObject):
@@ -14,11 +14,11 @@ class FileSystemModel(QObject):
     updated = pyqtSignal()
 
 
-    def __init__(self):
+    def __init__(self, settings):
         super(FileSystemModel, self).__init__()
         self.rootpath = None
         self.rootitem = None
-        self.settings = QlrBrowserSettings()
+        self.settings = settings
         self.validSortDelimitChars = ['~','!','#','$','%','&','+','-',';','=','@','^','_']
 
     def setRootPath(self, path):
@@ -27,7 +27,7 @@ class FileSystemModel(QObject):
         self.update()
 
     def update(self):
-        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(), namingregex=self.namingregex())
+        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
         self.updated.emit()
 
     def namingregex(self):
@@ -53,6 +53,7 @@ class FileSystemItem(QObject):
 
     def __init__(self, file, recurse = True, recursion_counter = None, namingregex = None):
         super(FileSystemItem, self).__init__()
+        self.namingregex = namingregex
 
         # Raise exception if root path has too many child elements
         if recursion_counter:
@@ -66,7 +67,7 @@ class FileSystemItem(QObject):
         self.basename = self.fileinfo.completeBaseName()
         self.displayname = self.fileinfo.fileName() if self.fileinfo.isDir() else self.fileinfo.completeBaseName()
         if namingregex:
-            self.displayname = namingregex.match(self.displayname).group(1)
+            self.displayname = self.namingregex.match(self.displayname).group(1)
         self.icon = FileSystemItem.iconProvider.icon(self.fileinfo)
         self.isdir = self.fileinfo.isDir()
         self.children = [] if self.isdir else None
@@ -74,7 +75,7 @@ class FileSystemItem(QObject):
             qdir = QDir(self.fullpath)
             for finfo in qdir.entryInfoList(
                     FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
-                self.children.append(FileSystemItem(finfo, recurse, recursion_counter, namingregex))
+                self.children.append(FileSystemItem(finfo, recurse, recursion_counter, self.namingregex))
         else:
             # file
             # Populate this if and when needed
@@ -93,10 +94,10 @@ class FileSystemItem(QObject):
         if self.isdir:
             if namematch:
                 # Stop searching. Return this dir and all sub items
-                return FileSystemItem(self.fullpath, True)
+                return FileSystemItem(self.fullpath, True, namingregex = self.namingregex)
             else:
                 # Only return dir if at least one sub item is a filter match
-                diritem = FileSystemItem(self.fullpath, False)
+                diritem = FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
                 for child in self.children:
                     childmatch = child.filtered(filter)
                     if childmatch is not None:
@@ -107,7 +108,7 @@ class FileSystemItem(QObject):
             if self.searchablecontent is None:
                 self.searchablecontent = self.get_searchable_content().lower()
             if namematch or self.content_matches(filter):
-                return FileSystemItem(self.fullpath, False)
+                return FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
         return None
 
     def matches(self, searchterm):
@@ -173,9 +174,8 @@ class FileSystemRecursionException():
         return repr(self.message)
 
 class FileSystemRecursionCounter():
-    def __init__(self):
+    def __init__(self, settings):
         self.count = 0
-        settings = QlrBrowserSettings()
         self.maxcount = settings.value("maxFileSystemObjects")
 
     def increment(self):

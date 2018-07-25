@@ -22,19 +22,20 @@
 """
 
 import os
-from PyQt4 import QtGui, uic
-from PyQt4.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer
+from qgis.PyQt import uic, QtWidgets
+from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, pyqtSlot, Qt, QTimer
 from qgis._gui import QgsMessageBar
+from qgis.core import Qgis
 from ..core.filesystemmodel import FileSystemModel, FileSystemRecursionException
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'dockwidget.ui'))
 
 
-class DockWidget(QtGui.QDockWidget, FORM_CLASS):
+class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     """The DockWidget class for the Qlr Panel.
     """
-    iconProvider = QtGui.QFileIconProvider()
+    iconProvider = QtWidgets.QFileIconProvider()
 
     closingPlugin = pyqtSignal()
 
@@ -42,7 +43,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
 
     refreshButtonClicked = pyqtSignal()
 
-    def __init__(self, iface=None):
+    def __init__(self, settings, iface=None):
         """
         Constructor.
         Sets the parent, sets up the UI and fills the tree.
@@ -55,12 +56,13 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
 
+        self.settings = settings
         self.setupUi(self)
 
         self.iface = iface
 
         # UI
-        self.filterLineEdit.setPlaceholderText( self.trUtf8(u'Filter'))
+        self.filterLineEdit.setPlaceholderText( self.tr(u'Filter'))
         self.treeWidget.setColumnCount(1)
         self.treeWidget.header().hide()
 
@@ -90,14 +92,14 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         """
         if os.path.exists(path):
             self.root_paths.add(path)
-            fs = FileSystemModel()
+            fs = FileSystemModel(self.settings)
             self.file_system[path] = fs
             fs.updated.connect(self._fillTree)
-            try:
-                fs.setRootPath(path)
-            except FileSystemRecursionException as e:
-                message = self.trUtf8("Configured base path has too many files (> {})").format(e.maxcount)
-                self._setRootPathMessage(message)
+            #try:
+            fs.setRootPath(path)
+            #except Exception as e:
+            #    message = self.tr("Error: {}").format(str(e))
+            #   self._setRootPathMessage(message)
 
     def removeRootPath(self, path):
         """
@@ -142,8 +144,8 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
                 fs.update()
             except FileSystemRecursionException as e:
                 self._setRootPathMessage(
-                    self.trUtf8(
-                    "Configured base path has too many files (> {})".format(
+                    self.tr(
+                    "Configured1 base path has too many files (> {})".format(
                         self.config.get('max_file_system_objects', 1000))
                     )
                 )
@@ -151,7 +153,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.reloadFileSystemInfo()
         self.refreshButtonClicked.emit()
 
-    @pyqtSlot(QtGui.QTreeWidgetItem, int)
+    @pyqtSlot(QtWidgets.QTreeWidgetItem, int)
     def _treeitem_doubleclicked(self, item, column):
         """
         Triggered on a doubleclick event of a Tree Widget.
@@ -161,7 +163,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         newState = Qt.Checked if item.checkState(column) == Qt.Unchecked else Qt.Unchecked
         item.setCheckState(column, newState)
 
-    @pyqtSlot(QtGui.QTreeWidgetItem, int)
+    @pyqtSlot(QtWidgets.QTreeWidgetItem, int)
     def _treeitem_changed(self, item, column):
         """
         Triggered on a change event of a Tree Widget.
@@ -182,7 +184,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         Updates tree display
         :filter_path , string, Optionally only the branch which includes filter_path
         """
-        iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.treeWidget)
         item = iterator.value()
         while item:
             # Skip if we only need to update part of tree
@@ -202,7 +204,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         Fills the tree with items.
         """
         if len(self.root_paths) < 1:
-            self._setRootPathMessage(self.trUtf8("No base directory configured..."))
+            self._setRootPathMessage(self.tr("No base directory configured..."))
             return
 
         self.treeWidget.clear()
@@ -221,7 +223,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         """
         Expands the tree.
         """
-        iterator = QtGui.QTreeWidgetItemIterator(self.treeWidget)
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.treeWidget)
         item = iterator.value()
         while item:
             if item.fileitem.matches(self.filterLineEdit.text().strip()):
@@ -279,14 +281,15 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
             return True
         else:
             self.iface.messageBar().pushMessage(
-                self.trUtf8("Qlr Browser Error"),
-                self.trUtf8("The selected path does not exist anymore"),
-                level=QgsMessageBar.CRITICAL)
+                self.tr("Qlr Browser Error"),
+                self.tr("The selected path does not exist anymore. The Qlr Browser panel is being updated"),
+                level=Qgis.Info,
+                duration=5)
             return False
 
     def _setRootPathMessage(self, message):
         self.treeWidget.clear()
-        baseTreeItem = QtGui.QTreeWidgetItem([message])
+        baseTreeItem = QtWidgets.QTreeWidgetItem([message])
         font = baseTreeItem.font(0)
         font.setItalic(True)
         baseTreeItem.setFont(0, font)
@@ -311,7 +314,7 @@ class DockWidget(QtGui.QDockWidget, FORM_CLASS):
         return os.path.commonprefix([child_dir, parent_dir]) == parent_dir
 
 
-class TreeWidgetItem(QtGui.QTreeWidgetItem):
+class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     """
     An item in the Tree Widget.
     """
