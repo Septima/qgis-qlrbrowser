@@ -186,7 +186,8 @@ class QlrBrowser:
         for p in list(self.dockwidget.root_paths):
             self.dockwidget.removeRootPath(p)
         self.dockwidget.addRootPath(self.settings.value("baseDirectory"))
-        self.qlrmanager.unload()
+        if self.qlrmanager:
+            self.qlrmanager.unload()
         self.qlrmanager = QlrManager(self.iface, self.dockwidget)
 
     # --------------------------------------------------------------------------
