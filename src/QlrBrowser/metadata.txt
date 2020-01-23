@@ -28,7 +28,7 @@ repository=https://github.com/Septima/qgis-qlrbrowser
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog=2020-01-23 2.1.0 Added german translation. Contributed by Stadtwerke München 
+changelog=2020-01-23 2.1.0 Added german translation contributed by Stadtwerke München. Minor bug fixes.
     2018-07-25 2.0.1 Changed icon and ready for plugin repository
     2018-06-18 2.0.0 Upgrade to 3.nightly
     2018-02-16 1.0.0 Fix loading QLR layers in QGIS 2.18.15
