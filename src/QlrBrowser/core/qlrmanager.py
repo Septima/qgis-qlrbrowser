@@ -57,7 +57,7 @@ class QlrManager():
         self.browser.refreshButtonClicked.connect(self.syncCheckedItems)
 
     def tr(self, message):
-        return QCoreApplication.translate('QlrBrowser', message)
+        return QCoreApplication.translate('QlrManager', message)
 
     def log(self, message):
         """ Write to QGIS log from bridge. """
