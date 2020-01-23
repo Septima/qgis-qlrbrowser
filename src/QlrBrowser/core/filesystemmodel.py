@@ -165,8 +165,9 @@ class FileSystemItem(QObject):
         finally:
             f.close()
 
-class FileSystemRecursionException():
+class FileSystemRecursionException(Exception):
     def __init__(self, message, maxcount):
+        super().__init__()
         self.message = message
         self.maxcount = maxcount
 
