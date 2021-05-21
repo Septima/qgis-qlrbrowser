@@ -13,3 +13,7 @@ The settings in QGIS 3 are found in the general settings:
 
 Be aware that currently (May 2019) there is a problem with saving qlr-files in QGIS 3. This is reported as a bug in the QGIS issue tracker: 
 https://issues.qgis.org/issues/19672.
+
+
+## More information
+Read Kurt Menke's blogpost about qlr-files and how to use and set-up the qlr-browser: https://septima.dk/nyheder/The-QLR-Browser-Plugin
