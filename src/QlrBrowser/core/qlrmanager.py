@@ -136,6 +136,7 @@ class QlrManager():
 
     def load_qlr_file(self, path):
         try:
+        
             # Load qlr into a group owned by us
             group = QgsLayerTreeGroup()
             QgsLayerDefinition.loadLayerDefinition(path, QgsProject.instance(), group) 
