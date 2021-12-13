@@ -135,38 +135,26 @@ class QlrManager():
                 self.load_qlr_file(path)
 
     def load_qlr_file(self, path):
-        # Load qlr into a group owned by us
         try:
-            group1 = QgsLayerTreeGroup()
-            group2 = QgsProject.instance().layerTreeRoot()
-            group = group1
-
-            # On Windows this locks the parent dirs indefinitely
-            # See http://hub.qgis.org/issues/14811
-            # QgsLayerDefinition.loadLayerDefinition(path, group)
-
-            # Instead handle file ourselves
-            f = QFile(path)
-            if not f.open(QIODevice.ReadOnly):
-                return False
-            try:
-                doc = QDomDocument()
-                if not doc.setContent( f.readAll() ):
-                    return False
-
-                rc, rs = QgsLayerDefinition.loadLayerDefinition(doc, QgsProject.instance(), group, QgsReadWriteContext())
-
-            finally:
-                f.close()
+        
+            # Load qlr into a group owned by us
+            group = QgsLayerTreeGroup()
+            QgsLayerDefinition.loadLayerDefinition(path, QgsProject.instance(), group) 
 
             # Get subtree of nodes
             nodes = group.children()
             # plain list of nodes
             nodeslist = []
-            for addedNode in nodes:
+            # Iterate reversed to maintain original order
+            for anode in reversed(nodes):
+                # Use clone to get a *copy* of node with no parent 
+                addedNode = anode.clone()
+                # Create a random (and hopefully unique) ident for node
                 internalid = self._random_string()
                 nodeinfo = {'internalid': internalid}
+                # Set ident as custom property for node
                 addedNode.setCustomProperty(QlrManager.customPropertyName, internalid)
+                # 
                 if isinstance(addedNode, QgsLayerTreeGroup):
                     nodeinfo['type'] = 'group'
                     nodeinfo['name'] = addedNode.name()
@@ -175,17 +163,14 @@ class QlrManager():
                     nodeinfo['name'] = addedNode.name()
                     nodeinfo['layerid'] = addedNode.layerId()
                 nodeslist.append(nodeinfo)
-                # Remove from parent node. Otherwise we cant add it to a new parent
-                group.takeChild(addedNode)
-            self.fileSystemItemToLegendNode[path] = nodeslist
+                QgsProject.instance().layerTreeRoot().insertChildNode(0, addedNode)
 
-            # Insert them into the main project
-            QgsProject.instance().layerTreeRoot().insertChildNodes(0, nodes)
+            self.fileSystemItemToLegendNode[path] = nodeslist
             return True
+
         except Exception as e:
             self.log('Failed to load qlr at ' + path +': '+ str(e))
             return False
-
     def _random_string(self):
         return ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
 
