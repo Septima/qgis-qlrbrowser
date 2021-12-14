@@ -93,10 +93,14 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         if os.path.exists(path):
             self.root_paths.add(path)
             fs = FileSystemModel(self.settings)
+
             self.file_system[path] = fs
+
             fs.updated.connect(self._fillTree)
-            #try:
             fs.setRootPath(path)
+
+            self._fillTree()
+            #try:
             #except Exception as e:
             #    message = self.tr("Error: {}").format(str(e))
             #   self._setRootPathMessage(message)
@@ -210,12 +214,16 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.treeWidget.clear()
 
         for basepath in self.root_paths:
-            fileitem = self._filteredFileItems(basepath)
-            if fileitem:
-                baseTreeItem = self._createWidgetItem(fileitem)
-                self._fillTreeRecursively(baseTreeItem, fileitem)
-                self.treeWidget.addTopLevelItem(baseTreeItem)
-                baseTreeItem.setExpanded(True)
+            fs =  self.file_system[basepath]
+            if fs.status == "updating":
+                self._setRootPathMessage(self.tr("Updating ..."))
+            else:
+                fileitem = self._filteredFileItems(basepath)
+                if fileitem:
+                    baseTreeItem = self._createWidgetItem(fileitem)
+                    self._fillTreeRecursively(baseTreeItem, fileitem)
+                    self.treeWidget.addTopLevelItem(baseTreeItem)
+                    baseTreeItem.setExpanded(True)
         if self.filterLineEdit.text().strip():
             self._expandTree()
 

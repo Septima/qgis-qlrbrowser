@@ -1,10 +1,14 @@
 __author__ = 'asger'
 
+from qgis.core import QgsTask, QgsApplication, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
 from qgis.PyQt.QtWidgets import QFileIconProvider
 from qgis.PyQt.QtXml import QDomDocument
 from ..mysettings import Settings
 import re
+
+#TBD REMOVE    
+from time import sleep
 
 class FileSystemModel(QObject):
     """
@@ -16,6 +20,7 @@ class FileSystemModel(QObject):
 
     def __init__(self, settings):
         super(FileSystemModel, self).__init__()
+        self.status = "new"
         self.rootpath = None
         self.rootitem = None
         self.settings = settings
@@ -23,12 +28,38 @@ class FileSystemModel(QObject):
 
     def setRootPath(self, path):
         self.rootpath = path.rstrip('/\\')
-        # Start filling
+        self.rootitem = FileSystemItem(self.rootpath, False, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
         self.update()
 
     def update(self):
-        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
-        self.updated.emit()
+        self.status = "updating"
+        QgsMessageLog.logMessage('Will start task', "QLR Browser, FileSystemModel", Qgis.Info)
+        on_finished = lambda exception, result : self.rootItemCreated(exception, result)
+        globals()['task1'] = QgsTask.fromFunction('Load', self.createRootItem, on_finished=on_finished)
+        QgsApplication.taskManager().addTask(globals()['task1'])
+        QgsMessageLog.logMessage('Added task {}'.format(globals()['task1'].description()), "QLR Browser, FileSystemModel", Qgis.Info)
+
+    def createRootItem(self, task):
+        try:
+            QgsMessageLog.logMessage('Task {}'.format(task.description()) + ' creating FileSystemItem',"QLR Browser, FileSystemModel", Qgis.Info)
+            filesystem_item = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
+            QgsMessageLog.logMessage('Task {}'.format(task.description()) + ' got FileSystemItem' ,"QLR Browser, FileSystemModel", Qgis.Info)
+            return {"filesystem_item":filesystem_item, "task": task.description()}
+        except Exception as e:
+             message = self.tr("Error: {}").format(str(e)) 
+             QgsMessageLog.logMessage('Task {}'.format(task.description()) + message ,"QLR Browser, FileSystemModel", Qgis.Info)
+             raise e
+
+    def rootItemCreated(self, exception, result):
+        QgsMessageLog.logMessage('Task load: rootItemCreated' ,"QLR Browser, FileSystemModel", Qgis.Info)
+        if exception is None:
+            self.rootitem = result["filesystem_item"]
+            self.status = "updated"
+            self.updated.emit()
+        else:
+            QgsMessageLog.logMessage("Exception: {}".format(exception),"Buh", Qgis.Critical)
+            raise exception
+        
 
     def namingregex(self):
         if not self.settings.value("useSortDelimitChar"):
@@ -75,6 +106,9 @@ class FileSystemItem(QObject):
             qdir = QDir(self.fullpath)
             for finfo in qdir.entryInfoList(
                     FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
+                #TBD REMOVE    
+                #TBD REMOVE    
+                sleep(0.05)
                 self.children.append(FileSystemItem(finfo, recurse, recursion_counter, self.namingregex))
         else:
             # file
