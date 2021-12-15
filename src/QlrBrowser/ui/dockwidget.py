@@ -80,12 +80,13 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.setInterval(500)
-        self.timer.timeout.connect( self._fillTree )
+        #self.timer.timeout.connect( self._fillTree )
+        self.timer.timeout.connect( self._setFilter )
         #self.filterLineEdit.textChanged.connect(self._fillTree)
         self.filterLineEdit.textChanged.connect( self.timer.start)
 
         # Default fill
-        self._fillTree()
+        #self._fillTree()
 
     def addRootPath(self, path):
         """Adds the root path and sets up the File System Model and connects it to the _fillTree method.
@@ -105,6 +106,12 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             #    message = self.tr("Error: {}").format(str(e))
             #   self._setRootPathMessage(message)
 
+    def _setFilter(self):
+        for basepath in self.root_paths:
+            fs =  self.file_system[basepath]
+            fs.filter(self.filterLineEdit.text().strip())
+        self._fillTree()
+
     def removeRootPath(self, path):
         """
         Removes the Root Path and disconnects the fillTree() method.
@@ -112,6 +119,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.root_paths.remove(path)
         fs = self.file_system.pop(path, None)
         fs.updated.disconnect(self._fillTree)
+        self._fillTree()
 
     def setPathCheckState(self, path, newState):
         """Sets the check state of a path.
@@ -216,17 +224,38 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         for basepath in self.root_paths:
             fs =  self.file_system[basepath]
-            if fs.status == "updating":
+            if fs.status == "loading":
+                self.filterLineEdit.setShowSpinner(True)
+                self.filterLineEdit.setReadOnly(True)
                 self._setRootPathMessage(self.tr("Loading ..."))
+            elif fs.status == "filtering":
+                self.filterLineEdit.setShowSpinner(True)
+                self.filterLineEdit.setReadOnly(True)
+                self._setRootPathMessage(self.tr("Filtering ..."))
+            elif fs.status == "overload":
+                self.filterLineEdit.setShowSpinner(False)
+                self.filterLineEdit.setReadOnly(False)
+                self._setRootPathMessage(self.tr("Configured base path has too many files") + "(> {})".format(self.settings.value('maxFileSystemObjects')))
+            elif fs.status == "error":
+                self.filterLineEdit.setShowSpinner(False)
+                self.filterLineEdit.setReadOnly(False)
+                self._setRootPathMessage(self.tr("An error ocurred during update"))
             else:
-                fileitem = self._filteredFileItems(basepath)
+                self.filterLineEdit.setShowSpinner(False)
+                self.filterLineEdit.setReadOnly(False)
+                #fileitem = self._filteredFileItems(basepath)
+                fileitem = fs.currentitem
                 if fileitem:
                     baseTreeItem = self._createWidgetItem(fileitem)
                     self._fillTreeRecursively(baseTreeItem, fileitem)
                     self.treeWidget.addTopLevelItem(baseTreeItem)
                     baseTreeItem.setExpanded(True)
-        if self.filterLineEdit.text().strip():
-            self._expandTree()
+                    if self.filterLineEdit.text().strip():
+                        self._expandTree()
+                else:
+                    if self.filterLineEdit.text().strip():
+                        self._setRootPathMessage(self.tr("No items meet the search filter"))
+
 
     def _expandTree(self):
         """
@@ -254,9 +283,9 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         fs =  self.file_system[basepath]
         filterText = self.filterLineEdit.text().strip()
         if filterText:
-            return fs.rootitem.filtered(filterText)
+            return fs.currentitem.filtered(filterText)
         else:
-            return fs.rootitem
+            return fs.currentitem
 
     def _fillTreeRecursively(self, baseWidgetItem, baseFileItem):
         """

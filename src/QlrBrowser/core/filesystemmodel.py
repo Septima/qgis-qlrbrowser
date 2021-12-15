@@ -1,5 +1,7 @@
 __author__ = 'asger'
 
+import random
+import string
 from qgis.core import QgsTask, QgsApplication, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
 from qgis.PyQt.QtWidgets import QFileIconProvider
@@ -17,49 +19,79 @@ class FileSystemModel(QObject):
 
     updated = pyqtSignal()
 
-
     def __init__(self, settings):
         super(FileSystemModel, self).__init__()
         self.status = "new"
         self.rootpath = None
         self.rootitem = None
+        self.currentitem = None
         self.settings = settings
         self.validSortDelimitChars = ['~','!','#','$','%','&','+','-',';','=','@','^','_']
 
     def setRootPath(self, path):
         self.rootpath = path.rstrip('/\\')
         self.rootitem = FileSystemItem(self.rootpath, False, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
+        self.currentitem = self.rootitem
         self.update()
 
     def update(self):
-        self.status = "updating"
-        QgsMessageLog.logMessage('Will start task', "QLR Browser, FileSystemModel", Qgis.Info)
-        on_finished = lambda exception, result : self.rootItemCreated(exception, result)
-        globals()['task1'] = QgsTask.fromFunction('Load', self.createRootItem, on_finished=on_finished)
-        QgsApplication.taskManager().addTask(globals()['task1'])
-        QgsMessageLog.logMessage('Added task {}'.format(globals()['task1'].description()), "QLR Browser, FileSystemModel", Qgis.Info)
+        self.status = "loading"
+        task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
+        #on_finished = lambda exception, result : self.rootItemCreated(exception, result)
+        globals()["task1"] = QgsTask.fromFunction('Load', self.createRootItem, on_finished=self.rootItemCreated)
+        QgsApplication.taskManager().addTask(globals()["task1"])
 
     def createRootItem(self, task):
+        filesystem_item = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
+        return {"filesystem_item":filesystem_item, "task": task.description()}
+
+    def rootItemCreated(self, exception, result=None):
+        #globals()[task_id] = None
         try:
-            QgsMessageLog.logMessage('Task {}'.format(task.description()) + ' creating FileSystemItem',"QLR Browser, FileSystemModel", Qgis.Info)
-            filesystem_item = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
-            QgsMessageLog.logMessage('Task {}'.format(task.description()) + ' got FileSystemItem' ,"QLR Browser, FileSystemModel", Qgis.Info)
-            return {"filesystem_item":filesystem_item, "task": task.description()}
+            if exception is None:
+                self.rootitem = result["filesystem_item"]
+                self.currentitem = self.rootitem
+                self.status = "updated"
+                self.updated.emit()
+            else:
+                raise exception
+        except FileSystemRecursionException as fsre:
+                self.status = "overload"
+                self.updated.emit()
+                #QgsMessageLog.logMessage("FileSystemRecursionException: {}".format(fsre), "MESSAGE_CATEGORY", Qgis.Critical)
+        except exception as e:
+                self.status = "error"
+                self.updated.emit()
+                QgsMessageLog.logMessage("Exception: {}".format(e), "Qlr Browser", Qgis.Critical)
+
+    def filter(self, filterString = ""):
+        if filterString == "":
+            self.status = "updated"
+            self.currentitem = self.rootitem
+            self.updated.emit()
+        else:
+            self.status = "filtering"
+            task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
+            on_finished = lambda exception, result : self.filterItemCreated(exception, result, task_id)
+            task = QgsTask.fromFunction('Filter', self.createFilterItem, on_finished=on_finished, filterString=filterString)
+            globals()[task_id] = task
+            QgsApplication.taskManager().addTask(globals()[task_id])
+
+    def createFilterItem(self, task, filterString):
+        try:
+            filtered_filesystem_item = self.rootitem.filtered(filterString)
+            return {"filesystem_item":filtered_filesystem_item, "task": task.description()}
         except Exception as e:
-             message = self.tr("Error: {}").format(str(e)) 
-             QgsMessageLog.logMessage('Task {}'.format(task.description()) + message ,"QLR Browser, FileSystemModel", Qgis.Info)
              raise e
 
-    def rootItemCreated(self, exception, result):
-        QgsMessageLog.logMessage('Task load: rootItemCreated' ,"QLR Browser, FileSystemModel", Qgis.Info)
+    def filterItemCreated(self, exception, result, task_id):
+        globals()[task_id] = None
         if exception is None:
-            self.rootitem = result["filesystem_item"]
+            self.currentitem = result["filesystem_item"]
             self.status = "updated"
             self.updated.emit()
         else:
-            QgsMessageLog.logMessage("Exception: {}".format(exception),"Buh", Qgis.Critical)
             raise exception
-        
 
     def namingregex(self):
         if not self.settings.value("useSortDelimitChar"):
@@ -85,6 +117,8 @@ class FileSystemItem(QObject):
     def __init__(self, file, recurse = True, recursion_counter = None, namingregex = None):
         super(FileSystemItem, self).__init__()
         self.namingregex = namingregex
+        #if recurse:
+            #raise Exception("Klavs er for dum")
 
         # Raise exception if root path has too many child elements
         if recursion_counter:
@@ -106,9 +140,6 @@ class FileSystemItem(QObject):
             qdir = QDir(self.fullpath)
             for finfo in qdir.entryInfoList(
                     FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
-                #TBD REMOVE    
-                #TBD REMOVE    
-                #sleep(0.05)
                 self.children.append(FileSystemItem(finfo, recurse, recursion_counter, self.namingregex))
         else:
             # file
