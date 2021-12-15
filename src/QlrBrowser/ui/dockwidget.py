@@ -146,6 +146,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for fs in self.file_system.values():
             try:
                 fs.update()
+                self._fillTree()
             except FileSystemRecursionException as e:
                 self._setRootPathMessage(
                     self.tr(
@@ -216,7 +217,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for basepath in self.root_paths:
             fs =  self.file_system[basepath]
             if fs.status == "updating":
-                self._setRootPathMessage(self.tr("Updating ..."))
+                self._setRootPathMessage(self.tr("Loading ..."))
             else:
                 fileitem = self._filteredFileItems(basepath)
                 if fileitem:

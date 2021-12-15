@@ -108,7 +108,7 @@ class FileSystemItem(QObject):
                     FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
                 #TBD REMOVE    
                 #TBD REMOVE    
-                sleep(0.05)
+                #sleep(0.05)
                 self.children.append(FileSystemItem(finfo, recurse, recursion_counter, self.namingregex))
         else:
             # file
@@ -128,10 +128,13 @@ class FileSystemItem(QObject):
         if self.isdir:
             if namematch:
                 # Stop searching. Return this dir and all sub items
-                return FileSystemItem(self.fullpath, True, namingregex = self.namingregex)
+                # return FileSystemItem(self.fullpath, True, namingregex = self.namingregex)
+                return self
             else:
                 # Only return dir if at least one sub item is a filter match
-                diritem = FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
+                #diritem = FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
+                diritem = FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
+                
                 for child in self.children:
                     childmatch = child.filtered(filter)
                     if childmatch is not None:
@@ -139,10 +142,16 @@ class FileSystemItem(QObject):
                 if len(diritem.children) > 0:
                     return diritem
         else:
-            if self.searchablecontent is None:
-                self.searchablecontent = self.get_searchable_content().lower()
-            if namematch or self.content_matches(filter):
-                return FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
+            #Check namematch before matching content (content is costly)
+            if namematch:
+                #return FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
+                return FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
+            else:
+                if self.searchablecontent is None:
+                    self.searchablecontent = self.get_searchable_content().lower()
+                if self.content_matches(filter):
+                    #return FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
+                    return FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
         return None
 
     def matches(self, searchterm):
