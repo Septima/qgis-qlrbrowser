@@ -2,6 +2,7 @@ __author__ = 'asger'
 
 import random
 import string
+
 from qgis.core import QgsTask, QgsApplication, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
 from qgis.PyQt.QtWidgets import QFileIconProvider
