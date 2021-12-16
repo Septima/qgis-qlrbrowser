@@ -36,7 +36,7 @@ class FileSystemModel(QObject):
 
     def update(self):
         self.status = "loading"
-        task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
+        #task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
         #on_finished = lambda exception, result : self.rootItemCreated(exception, result)
         globals()["task1"] = QgsTask.fromFunction('Load', self.createRootItem, on_finished=self.rootItemCreated)
         QgsApplication.taskManager().addTask(globals()["task1"])
@@ -55,14 +55,13 @@ class FileSystemModel(QObject):
                 self.updated.emit()
             else:
                 raise exception
-        except FileSystemRecursionException as fsre:
+        except FileSystemRecursionException:
                 self.status = "overload"
                 self.updated.emit()
-                #QgsMessageLog.logMessage("FileSystemRecursionException: {}".format(fsre), "MESSAGE_CATEGORY", Qgis.Critical)
-        except exception as e:
+        except Exception as e:
                 self.status = "error"
                 self.updated.emit()
-                QgsMessageLog.logMessage("Exception: {}".format(e), "Qlr Browser", Qgis.Critical)
+                QgsMessageLog.logMessage("Exception: {}".format(str(e)), "Qlr Browser", Qgis.Critical)
 
     def filter(self, filterString = ""):
         if filterString == "":
@@ -117,8 +116,8 @@ class FileSystemItem(QObject):
     def __init__(self, file, recurse = True, recursion_counter = None, namingregex = None):
         super(FileSystemItem, self).__init__()
         self.namingregex = namingregex
-        #if recurse:
-            #raise Exception("Klavs er for dum")
+        if recurse:
+            raise Exception("Klavs er for dum")
 
         # Raise exception if root path has too many child elements
         if recursion_counter:
@@ -175,13 +174,11 @@ class FileSystemItem(QObject):
         else:
             #Check namematch before matching content (content is costly)
             if namematch:
-                #return FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
                 return FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
             else:
                 if self.searchablecontent is None:
                     self.searchablecontent = self.get_searchable_content().lower()
                 if self.content_matches(filter):
-                    #return FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
                     return FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
         return None
 
@@ -209,8 +206,6 @@ class FileSystemItem(QObject):
         """
         f = QFile(self.fileinfo.absoluteFilePath())
         f.open(QIODevice.ReadOnly)
-        #stream = QTextStream(f)
-        #stream.setCodec("UTF-8")
         try:
             doc = QDomDocument()
             doc.setContent( f.readAll() )

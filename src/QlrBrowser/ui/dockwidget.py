@@ -222,39 +222,41 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self.treeWidget.clear()
 
-        for basepath in self.root_paths:
-            fs =  self.file_system[basepath]
-            if fs.status == "loading":
-                self.filterLineEdit.setShowSpinner(True)
-                self.filterLineEdit.setReadOnly(True)
-                self._setRootPathMessage(self.tr("Loading ..."))
-            elif fs.status == "filtering":
-                self.filterLineEdit.setShowSpinner(True)
-                self.filterLineEdit.setReadOnly(True)
-                self._setRootPathMessage(self.tr("Filtering ..."))
-            elif fs.status == "overload":
-                self.filterLineEdit.setShowSpinner(False)
-                self.filterLineEdit.setReadOnly(False)
-                self._setRootPathMessage(self.tr("Configured base path has too many files") + "(> {})".format(self.settings.value('maxFileSystemObjects')))
-            elif fs.status == "error":
-                self.filterLineEdit.setShowSpinner(False)
-                self.filterLineEdit.setReadOnly(False)
-                self._setRootPathMessage(self.tr("An error ocurred during update"))
-            else:
-                self.filterLineEdit.setShowSpinner(False)
-                self.filterLineEdit.setReadOnly(False)
-                #fileitem = self._filteredFileItems(basepath)
-                fileitem = fs.currentitem
-                if fileitem:
-                    baseTreeItem = self._createWidgetItem(fileitem)
-                    self._fillTreeRecursively(baseTreeItem, fileitem)
-                    self.treeWidget.addTopLevelItem(baseTreeItem)
-                    baseTreeItem.setExpanded(True)
-                    if self.filterLineEdit.text().strip():
-                        self._expandTree()
+        try:
+            for basepath in self.root_paths:
+                fs =  self.file_system[basepath]
+                if fs.status == "loading":
+                    self.filterLineEdit.setShowSpinner(True)
+                    self.filterLineEdit.setReadOnly(True)
+                    self._setRootPathMessage(self.tr("Loading ..."))
+                elif fs.status == "filtering":
+                    self.filterLineEdit.setShowSpinner(True)
+                    self.filterLineEdit.setReadOnly(True)
+                    self._setRootPathMessage(self.tr("Filtering ..."))
+                elif fs.status == "overload":
+                    self.filterLineEdit.setShowSpinner(False)
+                    self.filterLineEdit.setReadOnly(False)
+                    self._setRootPathMessage(self.tr("Configured base path has too many files") + "(> {})".format(self.settings.value('maxFileSystemObjects')))
+                elif fs.status == "error":
+                    self.filterLineEdit.setShowSpinner(False)
+                    self.filterLineEdit.setReadOnly(False)
+                    self._setRootPathMessage(self.tr("An error ocurred during update"))
                 else:
-                    if self.filterLineEdit.text().strip():
-                        self._setRootPathMessage(self.tr("No items meet the search filter"))
+                    self.filterLineEdit.setShowSpinner(False)
+                    self.filterLineEdit.setReadOnly(False)
+                    fileitem = fs.currentitem
+                    if fileitem:
+                        baseTreeItem = self._createWidgetItem(fileitem)
+                        self._fillTreeRecursively(baseTreeItem, fileitem)
+                        self.treeWidget.addTopLevelItem(baseTreeItem)
+                        baseTreeItem.setExpanded(True)
+                        if self.filterLineEdit.text().strip():
+                            self._expandTree()
+                    else:
+                        if self.filterLineEdit.text().strip():
+                            self._setRootPathMessage(self.tr("No items meet the search filter"))
+        except Exception as e:
+            QgsMessageLog.logMessage("Exception: {}".format(e), "Qlr Browser._fillTree", Qgis.Critical)
 
 
     def _expandTree(self):
