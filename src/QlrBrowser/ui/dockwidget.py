@@ -31,7 +31,6 @@ from ..core.filesystemmodel import FileSystemModel, FileSystemRecursionException
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'dockwidget.ui'))
 
-
 class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     """The DockWidget class for the Qlr Panel.
     """
@@ -80,8 +79,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.setInterval(500)
-        self.timer.timeout.connect( self._fillTree )
-        #self.filterLineEdit.textChanged.connect(self._fillTree)
+        self.timer.timeout.connect( self._setFilter )
         self.filterLineEdit.textChanged.connect( self.timer.start)
 
         # Default fill
@@ -93,13 +91,19 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         if os.path.exists(path):
             self.root_paths.add(path)
             fs = FileSystemModel(self.settings)
+
             self.file_system[path] = fs
+
             fs.updated.connect(self._fillTree)
-            #try:
             fs.setRootPath(path)
-            #except Exception as e:
-            #    message = self.tr("Error: {}").format(str(e))
-            #   self._setRootPathMessage(message)
+
+            self._fillTree()
+
+    def _setFilter(self):
+        for basepath in self.root_paths:
+            fs =  self.file_system[basepath]
+            fs.filter(self.filterLineEdit.text().strip())
+        self._fillTree()
 
     def removeRootPath(self, path):
         """
@@ -108,6 +112,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.root_paths.remove(path)
         fs = self.file_system.pop(path, None)
         fs.updated.disconnect(self._fillTree)
+        self._fillTree()
 
     def setPathCheckState(self, path, newState):
         """Sets the check state of a path.
@@ -142,6 +147,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for fs in self.file_system.values():
             try:
                 fs.update()
+                self._fillTree()
             except FileSystemRecursionException as e:
                 self._setRootPathMessage(
                     self.tr(
@@ -210,14 +216,37 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.treeWidget.clear()
 
         for basepath in self.root_paths:
-            fileitem = self._filteredFileItems(basepath)
-            if fileitem:
-                baseTreeItem = self._createWidgetItem(fileitem)
-                self._fillTreeRecursively(baseTreeItem, fileitem)
-                self.treeWidget.addTopLevelItem(baseTreeItem)
-                baseTreeItem.setExpanded(True)
-        if self.filterLineEdit.text().strip():
-            self._expandTree()
+            fs =  self.file_system[basepath]
+            if fs.status == "loading":
+                self.filterLineEdit.setShowSpinner(True)
+                self.filterLineEdit.setReadOnly(True)
+                self._setRootPathMessage(self.tr("Loading ..."))
+            elif fs.status == "filtering":
+                self.filterLineEdit.setShowSpinner(True)
+                self.filterLineEdit.setReadOnly(True)
+                self._setRootPathMessage(self.tr("Filtering ..."))
+            elif fs.status == "overload":
+                self.filterLineEdit.setShowSpinner(False)
+                self.filterLineEdit.setReadOnly(False)
+                self._setRootPathMessage(self.tr("Configured base path has too many files") + "(> {})".format(self.settings.value('maxFileSystemObjects')))
+            elif fs.status == "error":
+                self.filterLineEdit.setShowSpinner(False)
+                self.filterLineEdit.setReadOnly(False)
+                self._setRootPathMessage(self.tr("An error ocurred during update"))
+            else:
+                self.filterLineEdit.setShowSpinner(False)
+                self.filterLineEdit.setReadOnly(False)
+                fileitem = fs.currentitem
+                if fileitem:
+                    baseTreeItem = self._createWidgetItem(fileitem)
+                    self._fillTreeRecursively(baseTreeItem, fileitem)
+                    self.treeWidget.addTopLevelItem(baseTreeItem)
+                    baseTreeItem.setExpanded(True)
+                    if self.filterLineEdit.text().strip():
+                        self._expandTree()
+                else:
+                    if self.filterLineEdit.text().strip():
+                        self._setRootPathMessage(self.tr("No items meet the search filter"))
 
     def _expandTree(self):
         """
@@ -245,9 +274,9 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         fs =  self.file_system[basepath]
         filterText = self.filterLineEdit.text().strip()
         if filterText:
-            return fs.rootitem.filtered(filterText)
+            return fs.currentitem.filtered(filterText)
         else:
-            return fs.rootitem
+            return fs.currentitem
 
     def _fillTreeRecursively(self, baseWidgetItem, baseFileItem):
         """

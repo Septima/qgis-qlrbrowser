@@ -11,7 +11,7 @@ class Settings(SettingManager):
         SettingManager.__init__(self, pluginName)
         self.add_setting(String('baseDirectory', Scope.Global, ''))
         self.add_setting(String('sortDelimitChar', Scope.Global, '~'))
-        self.add_setting(Integer('maxFileSystemObjects', Scope.Global, 1000))
+        self.add_setting(Integer('maxFileSystemObjects', Scope.Global, 5000))
         self.add_setting(Bool('useSortDelimitChar', Scope.Global, True))
 
     def emit_updated(self):

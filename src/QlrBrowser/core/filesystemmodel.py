@@ -1,10 +1,17 @@
 __author__ = 'asger'
 
+import random
+import string
+
+from qgis.core import QgsTask, QgsApplication, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import QFileInfo, QDir, pyqtSignal, QObject, QFile, QIODevice, QTextStream
 from qgis.PyQt.QtWidgets import QFileIconProvider
 from qgis.PyQt.QtXml import QDomDocument
 from ..mysettings import Settings
 import re
+
+#TBD REMOVE    
+from time import sleep
 
 class FileSystemModel(QObject):
     """
@@ -13,22 +20,79 @@ class FileSystemModel(QObject):
 
     updated = pyqtSignal()
 
-
     def __init__(self, settings):
         super(FileSystemModel, self).__init__()
+        self.status = "new"
         self.rootpath = None
         self.rootitem = None
+        self.currentitem = None
         self.settings = settings
         self.validSortDelimitChars = ['~','!','#','$','%','&','+','-',';','=','@','^','_']
 
     def setRootPath(self, path):
         self.rootpath = path.rstrip('/\\')
-        # Start filling
+        self.rootitem = FileSystemItem(self.rootpath, False, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
+        self.currentitem = self.rootitem
         self.update()
 
     def update(self):
-        self.rootitem = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
-        self.updated.emit()
+        self.status = "loading"
+        task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
+        globals()[task_id] = QgsTask.fromFunction('Load', self.createRootItem, on_finished=self.rootItemCreated)
+        QgsApplication.taskManager().addTask(globals()[task_id])
+
+    def createRootItem(self, task):
+        filesystem_item = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
+        return {"filesystem_item":filesystem_item, "task": task.description()}
+
+    def rootItemCreated(self, exception, result=None):
+        #globals()[task_id] = None
+        try:
+            if exception is None:
+                self.rootitem = result["filesystem_item"]
+                self.currentitem = self.rootitem
+                self.status = "updated"
+                self.updated.emit()
+            else:
+                raise exception
+        except FileSystemRecursionException:
+                self.status = "overload"
+                self.updated.emit()
+        except Exception as e:
+                self.status = "error"
+                self.updated.emit()
+                QgsMessageLog.logMessage("Exception: {}".format(str(e)), "Qlr Browser", Qgis.Critical)
+
+    def filter(self, filterString = ""):
+        if filterString == "":
+            self.status = "updated"
+            self.currentitem = self.rootitem
+            self.updated.emit()
+        else:
+            self.status = "filtering"
+            task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
+            on_finished = lambda exception, result : self.filterItemCreated(exception, result, task_id)
+            task = QgsTask.fromFunction('Filter', self.createFilterItem, on_finished=on_finished, filterString=filterString)
+            globals()[task_id] = task
+            QgsApplication.taskManager().addTask(globals()[task_id])
+
+    def createFilterItem(self, task, filterString):
+        try:
+            filtered_filesystem_item = self.rootitem.filtered(filterString)
+            return {"filesystem_item":filtered_filesystem_item, "task": task.description()}
+        except Exception as e:
+             raise e
+
+    def filterItemCreated(self, exception, result, task_id):
+        globals()[task_id] = None
+        if exception is None:
+            self.currentitem = result["filesystem_item"]
+            self.status = "updated"
+            self.updated.emit()
+        else:
+            self.status = "error"
+            self.updated.emit()
+            QgsMessageLog.logMessage("Exception: {}".format(str(exception)), "Qlr Browser", Qgis.Critical)
 
     def namingregex(self):
         if not self.settings.value("useSortDelimitChar"):
@@ -37,7 +101,6 @@ class FileSystemModel(QObject):
             char = self.settings.value("sortDelimitChar")
             if char not in self.validSortDelimitChars:
                 raise Exception("sortDelimitChar is not valid: '" + char + "'. Should be one of: " + ",".join(self.validSortDelimitChars))
-            # Like ^(?:[0-9]{1,3}\~)?(.*)$ for char='~'
             strRex = '^(?:[0-9]{1,3}\\' + char + ')?(.*)$'
             return re.compile(strRex)
 
@@ -94,10 +157,11 @@ class FileSystemItem(QObject):
         if self.isdir:
             if namematch:
                 # Stop searching. Return this dir and all sub items
-                return FileSystemItem(self.fullpath, True, namingregex = self.namingregex)
+                return self
             else:
                 # Only return dir if at least one sub item is a filter match
-                diritem = FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
+                diritem = FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
+                
                 for child in self.children:
                     childmatch = child.filtered(filter)
                     if childmatch is not None:
@@ -105,10 +169,14 @@ class FileSystemItem(QObject):
                 if len(diritem.children) > 0:
                     return diritem
         else:
-            if self.searchablecontent is None:
-                self.searchablecontent = self.get_searchable_content().lower()
-            if namematch or self.content_matches(filter):
-                return FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
+            #Check namematch before matching content (content is costly)
+            if namematch:
+                return FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
+            else:
+                if self.searchablecontent is None:
+                    self.searchablecontent = self.get_searchable_content().lower()
+                if self.content_matches(filter):
+                    return FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
         return None
 
     def matches(self, searchterm):
@@ -135,8 +203,6 @@ class FileSystemItem(QObject):
         """
         f = QFile(self.fileinfo.absoluteFilePath())
         f.open(QIODevice.ReadOnly)
-        #stream = QTextStream(f)
-        #stream.setCodec("UTF-8")
         try:
             doc = QDomDocument()
             doc.setContent( f.readAll() )
