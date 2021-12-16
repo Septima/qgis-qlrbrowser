@@ -36,10 +36,9 @@ class FileSystemModel(QObject):
 
     def update(self):
         self.status = "loading"
-        #task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
-        #on_finished = lambda exception, result : self.rootItemCreated(exception, result)
-        globals()["task1"] = QgsTask.fromFunction('Load', self.createRootItem, on_finished=self.rootItemCreated)
-        QgsApplication.taskManager().addTask(globals()["task1"])
+        task_id = ''.join(random.choice(string.ascii_lowercase) for x in range(10))
+        globals()[task_id] = QgsTask.fromFunction('Load', self.createRootItem, on_finished=self.rootItemCreated)
+        QgsApplication.taskManager().addTask(globals()[task_id])
 
     def createRootItem(self, task):
         filesystem_item = FileSystemItem(self.rootpath, True, FileSystemRecursionCounter(self.settings), namingregex=self.namingregex())
@@ -90,7 +89,9 @@ class FileSystemModel(QObject):
             self.status = "updated"
             self.updated.emit()
         else:
-            raise exception
+            self.status = "error"
+            self.updated.emit()
+            QgsMessageLog.logMessage("Exception: {}".format(str(exception)), "Qlr Browser", Qgis.Critical)
 
     def namingregex(self):
         if not self.settings.value("useSortDelimitChar"):
@@ -99,7 +100,6 @@ class FileSystemModel(QObject):
             char = self.settings.value("sortDelimitChar")
             if char not in self.validSortDelimitChars:
                 raise Exception("sortDelimitChar is not valid: '" + char + "'. Should be one of: " + ",".join(self.validSortDelimitChars))
-            # Like ^(?:[0-9]{1,3}\~)?(.*)$ for char='~'
             strRex = '^(?:[0-9]{1,3}\\' + char + ')?(.*)$'
             return re.compile(strRex)
 
@@ -116,8 +116,6 @@ class FileSystemItem(QObject):
     def __init__(self, file, recurse = True, recursion_counter = None, namingregex = None):
         super(FileSystemItem, self).__init__()
         self.namingregex = namingregex
-        if recurse:
-            raise Exception("Klavs er for dum")
 
         # Raise exception if root path has too many child elements
         if recursion_counter:
@@ -158,11 +156,9 @@ class FileSystemItem(QObject):
         if self.isdir:
             if namematch:
                 # Stop searching. Return this dir and all sub items
-                # return FileSystemItem(self.fullpath, True, namingregex = self.namingregex)
                 return self
             else:
                 # Only return dir if at least one sub item is a filter match
-                #diritem = FileSystemItem(self.fullpath, False, namingregex = self.namingregex)
                 diritem = FileSystemItem(self.fileinfo, False, namingregex = self.namingregex)
                 
                 for child in self.children:
