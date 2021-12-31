@@ -18,7 +18,7 @@ email=kontakt@septima.dk
 about=
     This plugin enables a layer menu in a nested tree structure based on .qlr files.
     The layer tree is nested according to the location in folder/subfolder of the .qlr files.
-    Development of this plugin has been funded by Haderslev Kommune, Frederikssund Kommune, Ishøj Kommune and QGIS Brugergruppe Danmark.
+    Development of this plugin has been funded by Haderslev Kommune, Frederikssund Kommune, Ishøj Kommune, Novafos and QGIS Brugergruppe Danmark.
     German translation contributed by Stadtwerke München.
 
 tracker=https://github.com/Septima/qgis-qlrbrowser/issues
