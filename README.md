@@ -6,7 +6,6 @@ The layer tree is nested according to the location in folder/subfolder of the .q
 
 ## Installation
 A Danish installation manual can be found in the the [wiki](../../wiki/Installation-og-ops%C3%A6tning).
-Note - this is a guide to installation in QGIS 2.18.
 
 The settings in QGIS 3 are found in the general settings:
 ![Example](https://raw.githubusercontent.com/Septima/qgis-qlrbrowser/master/Qlr-browser_QGIS3_Settings.png)
