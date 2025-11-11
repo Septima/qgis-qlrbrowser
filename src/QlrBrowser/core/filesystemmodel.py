@@ -61,7 +61,7 @@ class FileSystemModel(QObject):
         except Exception as e:
                 self.status = "error"
                 self.updated.emit()
-                QgsMessageLog.logMessage("Exception: {}".format(str(e)), "Qlr Browser", Qgis.Critical)
+                QgsMessageLog.logMessage("Exception: {}".format(str(e)), "Qlr Browser", Qgis.MessageLevel.Critical)
 
     def filter(self, filterString = ""):
         if filterString == "":
@@ -92,7 +92,7 @@ class FileSystemModel(QObject):
         else:
             self.status = "error"
             self.updated.emit()
-            QgsMessageLog.logMessage("Exception: {}".format(str(exception)), "Qlr Browser", Qgis.Critical)
+            QgsMessageLog.logMessage("Exception: {}".format(str(exception)), "Qlr Browser", Qgis.MessageLevel.Critical)
 
     def namingregex(self):
         if not self.settings.value("useSortDelimitChar"):
@@ -137,7 +137,7 @@ class FileSystemItem(QObject):
         if self.isdir and recurse:
             qdir = QDir(self.fullpath)
             for finfo in qdir.entryInfoList(
-                    FileSystemItem.fileExtensions , QDir.Files | QDir.AllDirs | QDir.NoDotAndDotDot,QDir.Name):
+                    FileSystemItem.fileExtensions , QDir.Filter.Files | QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot,QDir.SortFlag.Name):
                 self.children.append(FileSystemItem(finfo, recurse, recursion_counter, self.namingregex))
         else:
             # file
@@ -202,7 +202,7 @@ class FileSystemItem(QObject):
         Pulls out tags from the object and returns them in order to be used by the filtered() method.
         """
         f = QFile(self.fileinfo.absoluteFilePath())
-        f.open(QIODevice.ReadOnly)
+        f.open(QIODevice.OpenModeFlag.ReadOnly)
         try:
             doc = QDomDocument()
             doc.setContent( f.readAll() )

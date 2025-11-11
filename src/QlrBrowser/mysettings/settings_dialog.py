@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-from PyQt5 import QtGui, uic
-from PyQt5.QtWidgets import QFileDialog
+from qgis.PyQt import QtGui, uic
+from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.gui import (QgsOptionsPageWidget)
 from qgis.PyQt.QtWidgets import QVBoxLayout, QFileDialog
 from .qgissettingmanager import *
@@ -20,7 +20,6 @@ class ConfigOptionsPage(QgsOptionsPageWidget):
         self.config_widget = ConfigDialog(self.settings)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setMargin(0)
         self.setLayout(layout)
         layout.addWidget(self.config_widget)
         self.setObjectName('qkrBrowserOptions')

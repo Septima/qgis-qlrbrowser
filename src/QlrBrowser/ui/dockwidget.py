@@ -166,7 +166,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         """
         if item.fileitem.isdir:
             return
-        newState = Qt.Checked if item.checkState(column) == Qt.Unchecked else Qt.Unchecked
+        newState = Qt.CheckState.Checked if item.checkState(column) == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
         item.setCheckState(column, newState)
 
     @pyqtSlot(QtWidgets.QTreeWidgetItem, int)
@@ -174,7 +174,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         """
         Triggered on a change event of a Tree Widget.
         """
-        checked = item.checkState(column) == Qt.Checked
+        checked = item.checkState(column) == Qt.CheckState.Checked
         path = item.fullpath
         if checked:
             # Dont try to turn on a non-existing qlr
@@ -201,7 +201,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     item.setSubChecked(num)
                 # checked
                 checked = self.getIsPathChecked(item.fullpath)
-                item.setCheckState(0, Qt.Unchecked if not checked else Qt.Checked )
+                item.setCheckState(0, Qt.CheckState.Unchecked if not checked else Qt.CheckState.Checked )
             iterator += 1
             item = iterator.value()
 
@@ -312,7 +312,7 @@ class DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 self.tr("Qlr Browser Error"),
                 self.tr("The selected path does not exist anymore. The Qlr Browser panel is being updated"),
-                level=Qgis.Info,
+                level=Qgis.MessageLevel.Info,
                 duration=5)
             return False
 
@@ -358,12 +358,12 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         self.subchecked = checked_sub_paths
         self.setIcon(0, fileitem.icon)
         self.setToolTip(0, self.fullpath)
-        self.setCheckState(0, Qt.Unchecked if not checked else Qt.Checked )
+        self.setCheckState(0, Qt.CheckState.Unchecked if not checked else Qt.CheckState.Checked )
 
         if fileitem.isdir:
-            self.setFlags(self.flags() &  ~Qt.ItemIsUserCheckable)
+            self.setFlags(self.flags() &  ~Qt.ItemFlag.ItemIsUserCheckable)
         else:
-            self.setFlags(self.flags() | Qt.ItemIsUserCheckable)
+            self.setFlags(self.flags() | Qt.ItemFlag.ItemIsUserCheckable)
 
         self.updateDisplay()
 

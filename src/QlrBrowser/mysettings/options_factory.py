@@ -1,7 +1,7 @@
 import os
 from qgis.gui import (QgsOptionsWidgetFactory)
 from qgis.core import QgsApplication
-from PyQt5.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon
 from .settings_dialog import ConfigOptionsPage
 
 class OptionsFactory(QgsOptionsWidgetFactory):
