@@ -64,7 +64,7 @@ class QlrManager():
         QgsMessageLog.logMessage(
             '{}'.format(message),
             'QlrBrowser',
-             Qgis.Info
+             Qgis.MessageLevel.Info
         )
 
 
@@ -127,7 +127,7 @@ class QlrManager():
                 pass
             else:
                 message = self.tr(u"Adding qlr-file to the layer panel")
-                self.iface.messageBar().pushMessage(self.tr('QlrBrowser'), message, level=Qgis.Info, duration=5)
+                self.iface.messageBar().pushMessage(self.tr('QlrBrowser'), message, level=Qgis.MessageLevel.Info, duration=5)
 
                 # Force show messageBar
                 QCoreApplication.processEvents()

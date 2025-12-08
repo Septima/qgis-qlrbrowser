@@ -9,9 +9,10 @@
 [general]
 name=Qlr Browser
 qgisMinimumVersion=3.00
-qgisMaximumVersion=3.99
+qgisMaximumVersion=4.99
+supportsQt6=True
 description=This plugin lets the user browse and open qlr files
-version=3.0.0
+version=4.0.0
 author=Septima
 email=kontakt@septima.dk
 
@@ -28,7 +29,8 @@ repository=https://github.com/Septima/qgis-qlrbrowser
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog=2021-12-16 3.0.0 Async load filtering, fix display of groups
+changelog=2025-11-11 4.0.0 Updated to Qt6
+    2021-12-16 3.0.0 Async load filtering, fix display of groups
     2020-01-23 2.1.0 Added german translation contributed by Stadtwerke München. Minor bug fixes.
     2018-07-25 2.0.1 Changed icon and ready for plugin repository
     2018-06-18 2.0.0 Upgrade to 3.nightly
@@ -41,7 +43,7 @@ changelog=2021-12-16 3.0.0 Async load filtering, fix display of groups
     2015-12-12 0.1.0 Initial version
 
 # Tags are comma separated with spaces allowed
-tags=qlr browse browser data
+tags=qlr browse, browser, data, danmark, geodata
 
 homepage=https://github.com/Septima/qgis-qlrbrowser
 category=Plugins
